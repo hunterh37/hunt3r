@@ -315,7 +315,7 @@ export async function createScreen(renderer) {
     c.fillStyle = '#fff'; c.font = `600 38px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 210);
     c.fillStyle = '#000'; c.font = `600 22px ${FONT}`; c.fillText(CONTACT.name, PW / 2, 286);
     const paras = ['Mobile developer since 2015. I build native apps for iPhone, iPad and Apple Vision Pro in Swift, SwiftUI and RealityKit.',
-      'I design, code and ship every project end to end, from the first prototype to the App Store listing. Based in Boston.'];
+      'I design, code and ship every project end to end, from the first prototype to the App Store listing.'];
     c.textAlign = 'left'; c.font = `400 16px ${FONT}`; c.fillStyle = '#3a3a3c';
     let y = 334;
     for (const t of paras) {
