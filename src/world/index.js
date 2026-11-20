@@ -2,9 +2,8 @@ import * as THREE from 'three';
 import { range, smooth, easeOutCubic, easeInOutCubic, lerp, clamp01 } from '../timeline.js';
 import { toonMaterial, shared } from './toon.js';
 import { createPost } from './post.js';
-import { buildCity, signTexture } from './city.js';
+import { buildCity } from './city.js';
 import { createSky } from './sky.js';
-import { Builder } from './builder.js';
 
 const D2R = Math.PI / 180;
 
@@ -16,19 +15,6 @@ export async function createWorld({ renderer }) {
 
   const mat = toonMaterial();
   scene.add(buildCity(mat).group);
-
-  // alley sign, hung facing the camera
-  const signMat = toonMaterial({ map: signTexture() });
-  const sg = new THREE.PlaneGeometry(1.7, 0.85);
-  sg.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(12).fill(1), 3));
-  sg.rotateY(-Math.PI / 2);
-  const sign = new THREE.Mesh(sg, signMat);
-  sign.position.set(-31, 3.0, -1.55);
-  scene.add(sign);
-  const sb = new Builder();
-  sb.beam([-30.9, 0, -1.55], [-30.9, 3.4, -1.55], 0.07, 0.15);
-  const signPole = new THREE.Mesh(sb.build(), mat);
-  scene.add(signPole);
 
   const sky = createSky(mat, camera, reduced);
   scene.add(sky.group);
