@@ -1,0 +1,19 @@
+{
+  "name": "hunt3r",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5183 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5184 --strictPort",
+    "shot": "node scripts/shot.mjs"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "jpeg-js": "^0.4.4",
+    "puppeteer-core": "^25.18.1",
+    "vite": "^8.3.8"
+  }
+}

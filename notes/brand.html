@@ -1,0 +1,114 @@
+<title>HUNT3R brand and build</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 46rem reading column on paper, ink plates for stills and swatches breaking out to 64rem. */
+:root {
+  --paper: #f4f2ec; --ink: #0a0a0a; --mid: #b9b6ae; --rule: #cfccc3; --soft: #55534e;
+  --amber: #c9601a; --amber-fill: #ff8a3d; --haze: #9db4c8; --plate: #ebe8e0;
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --body: "Geist", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0d0d0c; --ink: #f4f2ec; --mid: #6f6d67; --rule: #2e2d2a; --soft: #a9a69e;
+  --amber: #ff8a3d; --amber-fill: #ff8a3d; --haze: #9db4c8; --plate: #171716; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0d0d0c; --ink: #f4f2ec; --mid: #6f6d67; --rule: #2e2d2a; --soft: #a9a69e;
+  --amber: #ff8a3d; --amber-fill: #ff8a3d; --haze: #9db4c8; --plate: #171716; color-scheme: dark }
+body { background: var(--paper); color: var(--ink); font: 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 3rem 5rem; }
+.col { max-width: 46rem; margin-inline: auto; display: flex; flex-direction: column; gap: 1.1rem; }
+.wide { max-width: 64rem; margin-inline: auto; }
+h1 { font: 400 clamp(3.2rem, 11vw, 6.5rem)/0.95 var(--display); letter-spacing: 0.04em; margin: 0; }
+h1 i { letter-spacing: 0; }
+h2 { font: 400 2rem/1.1 var(--display); margin: 2.2rem 0 0; text-wrap: balance; }
+p { margin: 0; }
+.label { font: 500 0.72rem/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--soft); }
+code { font: 0.86em var(--mono); background: var(--plate); padding: 0.1em 0.35em; }
+pre { font: 0.82rem/1.6 var(--mono); background: var(--plate); border: 1px solid var(--rule); padding: 1rem; margin: 0; overflow-x: auto; }
+.sw { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.75rem; }
+.sw div { border: 1px solid var(--ink); padding: 3.2rem 0.6rem 0.5rem; font: 0.72rem/1.4 var(--mono); }
+.sw .a { background: #0a0a0a; color: #f4f2ec; } .sw .b { background: #f4f2ec; color: #0a0a0a; }
+.sw .c { background: #b9b6ae; color: #0a0a0a; } .sw .d { background: #ff8a3d; color: #0a0a0a; } .sw .e { background: #9db4c8; color: #0a0a0a; }
+figure { margin: 1.4rem auto; } figure img { display: block; width: 100%; border: 1px solid var(--ink); }
+figcaption { margin-top: 0.5rem; }
+.tw { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.9rem 0.55rem 0; border-top: 1px solid var(--rule); }
+th { font: 500 0.72rem/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--soft); border-top: 1px solid var(--ink); }
+td:first-child { font: 0.82rem/1.7 var(--mono); white-space: nowrap; font-variant-numeric: tabular-nums; }
+ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.45rem; }
+.dot { display: inline-block; width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--amber-fill); margin-right: 0.5em; }
+.spec { font: 400 2.6rem/1 var(--display); } .spec i { color: var(--amber); }
+</style>
+
+<div class="col">
+  <p class="label"><span class="dot"></span>hunt3r.org, first pass, 2026-11-20</p>
+  <h1>HUNT<i>3</i>R</h1>
+  <p>The site is a single scroll from 3,200 m above Boston to a phone held at eye height in Public Alley 431. The world is drawn in ink on paper. The phone and the hand are rendered as real objects in colour. The project is at <code>/Users/hunter/Dev/hunt3r</code>.</p>
+
+  <h2>Identity</h2>
+  <p>The wordmark is HUNT3R in Instrument Serif, with the 3 set in italic. Labels are Geist Mono, uppercase, tracked at 0.12em. Chrome sits on small paper labels with a 1 px ink border, like plate captions in a patent filing.</p>
+  <div class="sw">
+    <div class="a">INK<br>#0A0A0A</div><div class="b">PAPER<br>#F4F2EC</div><div class="c">MID<br>#B9B6AE</div><div class="d">AMBER<br>#FF8A3D</div><div class="e">HAZE<br>#9DB4C8</div>
+  </div>
+  <p>Amber is used for the sun, one lit window, one street lamp and the current-beat dot. Haze tints distant line work. Together they stay under 5% of the frame. Full colour appears only on the phone screen.</p>
+  <p class="spec">Apps, 2014 to <i>2026</i></p>
+
+  <h2>World shader</h2>
+  <p>Every world surface uses a three-step cel ramp (paper, mid, ink) with a screen-space halftone in the shadow band. A post pass detects depth and normal edges and draws ink lines with a noise wobble on the weight. Line width scales with depth so distant roofs stay thin. Clouds have their own shader with a grey underside band and short curved strokes. The phone scene is drawn after a depth clear with PBR materials and no edge pass.</p>
+
+  <h2>Scroll sequence</h2>
+  <div class="tw"><table>
+    <tr><th>p</th><th>Beat</th><th>Frame</th></tr>
+    <tr><td>0.00 to 0.14</td><td>Sky</td><td>Camera looks straight down through a gap in the cloud deck. The wordmark scales up until the camera passes through it. Readout shows ALT 3,200 M.</td></tr>
+    <tr><td>0.14 to 0.56</td><td>Descent</td><td>Straight fall. Back Bay blocks resolve. Captions pin in turn (BOSTON, MA, then BACK BAY, then PUBLIC ALLEY 431).</td></tr>
+    <tr><td>0.56 to 0.68</td><td>Alley</td><td>Camera drops between brownstone backs and pitch eases from -90 to 0 at 1.6 m. Readout switches to 42.3503 N 71.0810 W.</td></tr>
+    <tr><td>0.68 to 0.80</td><td>Memory</td><td>White flash, then ten patent-plate cards from 1965 to 2010 stack up in a collage. A second flash hands off.</td></tr>
+    <tr><td>0.80 to 1.00</td><td>Work</td><td>The arm rises with the iPhone. Photos library with 14 sunsets, one opens full screen, then the app grid. Contact row at 0.96.</td></tr>
+  </table></div>
+</div>
+
+<figure class="wide">
+  <img src="sheet.jpg" alt="Nine stills of the scroll sequence from sky to phone">
+  <figcaption class="label">Stills at p = 0, 0.08, 0.20, 0.40, 0.60, 0.66, 0.74, 0.90, 1.00. Headless Chrome, 1024 by 640.</figcaption>
+</figure>
+
+<div class="col">
+  <h2>The hand</h2>
+  <p>The hand is procedural geometry with generated skin maps. It reads as soft CG, about a third of the way to a photograph, and it will stay there without a scanned or generated asset. <code>OPENROUTER_API_KEY</code> is unset in this shell, so no image model was available, and no stock scan was on disk.</p>
+  <p>Either of these closes the gap. The loader already checks for the first.</p>
+  <ul>
+    <li>A scanned right-hand GLB at <code>public/arm/arm.glb</code> with a node named <code>PhoneAnchor</code>. <code>src/phone/index.js</code> loads it in place of the procedural hand when present.</li>
+    <li>A photographed or generated cutout of a hand holding a phone with the screen keyed out, used as a plane with the live screen texture mapped into the hole. This gives a true photograph at the cost of a fixed pose.</li>
+  </ul>
+
+  <h2>Open defects</h2>
+  <ul>
+    <li>Alley walls read as large block courses. Brownstone needs smaller brick and a red-brown read in line work.</li>
+    <li>The vanishing point of the alley is still a dark knot of wires and windows, and the Hancock tower is not legible in the sky gap.</li>
+    <li>At p = 0.20 one cloud sits over the middle of the city.</li>
+    <li>The paper panel behind the work list hides a large part of the alley at p = 0.90.</li>
+    <li>Portrait layout drops the app list and the contact row.</li>
+    <li>The loader wipe has not been captured because pinned stills skip it.</li>
+    <li>Sunset photos pass at thumbnail size. Land in several is a flat dark mass at full screen.</li>
+    <li>WORK, ABOUT, CONTACT, EMAIL, GITHUB and X are placeholder anchors.</li>
+    <li>Frame rate has not been measured. Draw calls are about 10 for the world by scene count.</li>
+  </ul>
+
+  <h2>Run</h2>
+  <pre>cd /Users/hunter/Dev/hunt3r
+npm run dev                      # http://localhost:5183
+node scripts/shot.mjs tag 0,0.5,1   # stills to notes/shots/tag/
+open "http://localhost:5183/?p=0.9&t=3"   # pin the timeline</pre>
+  <div class="tw"><table>
+    <tr><th>Path</th><th>Holds</th></tr>
+    <tr><td>src/timeline.js</td><td>Beat ranges and easing helpers shared by all modules</td></tr>
+    <tr><td>src/world/</td><td>Camera path, cel shader, outline pass, city, alley, clouds</td></tr>
+    <tr><td>src/phone/</td><td>iPhone, hand, skin maps, Photos and app screens, sunset generator</td></tr>
+    <tr><td>src/ui/</td><td>Loader, chrome, captions, montage cards, work list</td></tr>
+    <tr><td>notes/</td><td>CONTEXT.md, visual-log.md, shots</td></tr>
+  </table></div>
+  <p class="label">build: skipped (no Xcode targets; Vite dev server only)</p>
+</div>
