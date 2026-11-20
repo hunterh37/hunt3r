@@ -1,6 +1,7 @@
 import './ui.css';
 import { range, smooth, clamp01 } from '../timeline.js';
 import { CARDS, LAYOUT, cardHTML } from './cards.js';
+import { cloudSVG } from './cloud.js';
 
 const CAPS = [];
 const fmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
@@ -77,6 +78,14 @@ export function createUI(root) {
     });
   };
   measure(); addEventListener('resize', measure);
+  // toon clouds behind the intro text, rebuilt to the text block size
+  const clouds = [...root.querySelectorAll('.cloud')];
+  const drawClouds = () => clouds.forEach((el, i) => {
+    el.querySelector('.cloud-bg')?.remove();
+    el.insertAdjacentHTML('afterbegin', cloudSVG(el.offsetWidth, el.offsetHeight, 7 + i * 11));
+  });
+  drawClouds(); addEventListener('resize', drawClouds);
+  document.fonts?.ready.then(drawClouds);
 
   // write-if-changed cache
   const cache = new WeakMap();
