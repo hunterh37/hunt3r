@@ -38,6 +38,7 @@ function cover(ctx, img, x, y, w, h) {
 
 export async function createScreen(renderer) {
   const baseUrl = import.meta.env?.BASE_URL || '/';
+  const avatar = await loadImg(`${baseUrl}photos/avatar.jpg`);
   const photos = await Promise.all(Array.from({ length: NPH }, (_, i) => loadImg(`${baseUrl}photos/sunset-${String(i + 1).padStart(2, '0')}.jpg`)));
   const apps = await Promise.all(APPS.map(([f]) => loadImg(`${baseUrl}apps/${f}.jpg`)));
 
@@ -311,8 +312,9 @@ export async function createScreen(renderer) {
   }
   function about(c) {
     c.fillStyle = '#fff'; c.fillRect(0, 0, PW, PH); header(c, 'About');
-    c.fillStyle = '#d1d1d6'; c.beginPath(); c.arc(PW / 2, 196, 52, 0, 7); c.fill();
-    c.fillStyle = '#fff'; c.font = `600 38px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 210);
+    if (avatar) { c.save(); c.beginPath(); c.arc(PW / 2, 196, 52, 0, 7); c.clip(); cover(c, avatar, PW / 2 - 52, 196 - 52, 104, 104); c.restore(); c.textAlign = 'center'; }
+    else { c.fillStyle = '#d1d1d6'; c.beginPath(); c.arc(PW / 2, 196, 52, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.font = `600 38px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 210); }
     c.fillStyle = '#000'; c.font = `600 22px ${FONT}`; c.fillText(CONTACT.name, PW / 2, 286);
     const paras = ['Mobile developer since 2015. I build native apps for iPhone, iPad and Apple Vision Pro in Swift, SwiftUI and RealityKit.',
       'I design, code and ship every project end to end, from the first prototype to the App Store listing.'];
@@ -334,8 +336,9 @@ export async function createScreen(renderer) {
   const rowRect = (i) => ({ x: 16, y: 300 + i * 64, w: PW - 32, h: 56 });
   function contact(c) {
     c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, PW, PH); header(c, 'Contact');
-    c.fillStyle = '#aeaeb2'; c.beginPath(); c.arc(PW / 2, 190, 50, 0, 7); c.fill();
-    c.fillStyle = '#fff'; c.font = `600 36px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 203);
+    if (avatar) { c.save(); c.beginPath(); c.arc(PW / 2, 190, 50, 0, 7); c.clip(); cover(c, avatar, PW / 2 - 50, 190 - 50, 100, 100); c.restore(); c.textAlign = 'center'; }
+    else { c.fillStyle = '#aeaeb2'; c.beginPath(); c.arc(PW / 2, 190, 50, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.font = `600 36px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 203); }
     c.fillStyle = '#000'; c.font = `600 22px ${FONT}`; c.fillText(CONTACT.name, PW / 2, 274);
     contactRows().forEach((r, i) => {
       const b = rowRect(i);
