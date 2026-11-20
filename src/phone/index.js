@@ -170,7 +170,8 @@ export async function createPhone({ renderer }) {
   // Thumb motion: critically damped springs on pad x, y and lift.
   const thumb = hand?.userData?.thumb;
   const th = { x: thumb ? thumb.rest.x : 0, y: thumb ? thumb.rest.y : 0, l: 0, vx: 0, vy: 0, vl: 0, press: 0, last: '' };
-  const spring = (x, v, to, w, dt) => { const a = w * w * (to - x) - 2 * w * v; v += a * dt; return [x + v * dt, v]; };
+  // Exact critically damped step: stable for any dt and rapid target changes.
+  const spring = (x, v, to, w, dt) => { const d = x - to, e = Math.exp(-w * dt), j = (v + w * d) * dt; return [to + (d + j) * e, (v - w * j) * e]; };
   function stepThumb(dt) {
     if (!thumb || !dt) return;
     let tx = thumb.rest.x, ty = thumb.rest.y, tl = 0;

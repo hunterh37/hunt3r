@@ -25,7 +25,10 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-let target = 0, p = frozen ?? 0;
+// Montage beat (0.68..0.80) is skipped: page scroll f maps to p with that range cut out.
+const CUT0 = 0.68, CUT = 0.12;
+const skip = (f) => { f *= 1 - CUT; return f < CUT0 ? f : f + CUT; };
+let target = 0, f = 0, p = frozen ?? 0;
 const readScroll = () => {
   const max = document.documentElement.scrollHeight - window.innerHeight;
   target = max > 0 ? window.scrollY / max : 0;
@@ -38,7 +41,7 @@ let frames = 0;
 function frame() {
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = frozenT ?? clock.elapsedTime;
-  if (frozen === null) p += (target - p) * (1 - Math.exp(-dt * 6));
+  if (frozen === null) { f += (target - f) * (1 - Math.exp(-dt * 6)); p = skip(f); }
   else p = frozen;
 
   world.update(p, t, dt);

@@ -106,11 +106,9 @@ export function createSky(sunMat, camera, reduced) {
   sun.frustumCulled = false;
   group.add(sun);
 
-  // Three decks the camera falls through: apple, iPhone, hand holding iPhone.
+  // Deck the camera falls through: apple.
   const decks = [
     { shape: 'apple', y: 790, size: 62, seed: 11 },
-    { shape: 'iphone', y: 610, size: 58, seed: 12 },
-    { shape: 'hand', y: 450, size: 66, seed: 13 },
   ];
   for (const d of decks) {
     const c = camAt(d.y);

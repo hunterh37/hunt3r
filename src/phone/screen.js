@@ -206,10 +206,10 @@ export async function createScreen(renderer) {
     }
     if (fade > 0.001) {
       c.save(); c.globalAlpha = fade;
-      if (slide < 0.999) { c.save(); c.translate(-PW * 0.3 * slide, 0); portfolio(c); c.restore(); }
+      if (slide < 0.999) portfolio(c);
       if (slide > 0.001) {
-        c.save(); c.translate(PW * (1 - slide), 0); c.shadowColor = 'rgba(0,0,0,.25)'; c.shadowBlur = 24;
-        c.fillStyle = '#fff'; c.fillRect(0, 0, PW, PH); c.shadowBlur = 0; aboutSlide(c); c.restore();
+        c.save(); c.globalAlpha = fade * slide;
+        c.fillStyle = '#fff'; c.fillRect(0, 0, PW, PH); aboutSlide(c); c.restore();
       }
       statusBar(c, '#000'); homeBar(c, '#000'); c.restore();
     }
@@ -453,7 +453,7 @@ export async function createScreen(renderer) {
       if (!g.moved) tap(x, y);
     },
     wheel(dy, p) {
-      setInteractive(p);
+      if (st.mode === 'auto') return false;
       if (inApp() && st.app === 'library') { const s = clamp(st.scroll + dy, 0, LIB_MAX); if (s === st.scroll) return false; st.scroll = s; return true; }
       return false;
     },

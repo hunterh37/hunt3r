@@ -131,14 +131,14 @@ export function createUI(root) {
     });
 
     // montage
-    const f1 = flash(p, 0.6775, 0.6825, 0.7, 1), f2 = flash(p, 0.7885, 0.795, 0.805, 0.8);
+    const f1 = 0, f2 = 0; // montage skipped
     const f = Math.max(f1, f2);
     op(fl, f);
     fg(p, f);
-    op(dim, 0.62 * smooth(range(p, 0.684, 0.698)) * (1 - smooth(range(p, 0.788, 0.797))));
+    op(dim, 0 * smooth(range(p, 0.684, 0.698)) * (1 - smooth(range(p, 0.788, 0.797))));
     const blur = Math.round((f1 * 7 + f2 * 4) * 2) / 2;
     set(cardsEl, 'f', blur, (e, v) => { e.style.filter = v ? `blur(${v}px) brightness(${1 + v * 0.12})` : ''; });
-    const inMontage = p > 0.68 && p < 0.81;
+    const inMontage = false;
     const out = 1 - smooth(range(p, 0.786, 0.795));
     let vv = 0;
     cards.forEach((c, i) => {
