@@ -18,6 +18,7 @@ export const CONTACT = {
   email: '', // e.g. 'hello@example.com'
   x: 'https://x.com/hunter_spatial',
   instagram: 'https://instagram.com/hunter_spatial',
+  linkedin: 'https://www.linkedin.com/in/hunt3r-harris/',
 };
 const NPH = 36;
 const OPEN_INDEX = 4; // grid cell that opens
@@ -330,9 +331,25 @@ export async function createScreen(renderer) {
     CONTACT.phone && { label: 'Call', value: CONTACT.phone, href: 'tel:' + CONTACT.phone },
     CONTACT.phone && { label: 'Message', value: CONTACT.phone, href: 'sms:' + CONTACT.phone },
     CONTACT.email && { label: 'Email', value: CONTACT.email, href: 'mailto:' + CONTACT.email },
-    CONTACT.x && { label: 'X', value: '@' + CONTACT.x.split('/').pop(), href: CONTACT.x, ext: true },
-    CONTACT.instagram && { label: 'Instagram', value: '@' + CONTACT.instagram.split('/').pop(), href: CONTACT.instagram, ext: true },
+    CONTACT.x && { label: 'X', value: '@' + CONTACT.x.split('/').pop(), href: CONTACT.x, ext: true, icon: 'x' },
+    CONTACT.instagram && { label: 'Instagram', value: '@' + CONTACT.instagram.split('/').pop(), href: CONTACT.instagram, ext: true, icon: 'instagram' },
+    CONTACT.linkedin && { label: 'LinkedIn', value: CONTACT.linkedin.replace(/\/+$/, '').split('/').pop(), href: CONTACT.linkedin, ext: true, icon: 'linkedin' },
   ].filter(Boolean);
+  const BRAND = {
+    x: ['M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z'],
+    linkedin: ['M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z'],
+  };
+  const BRAND_COL = { x: '#000', instagram: '#e1306c', linkedin: '#0a66c2' };
+  function brandIcon(c, kind, x, y, sz) {
+    c.save(); c.translate(x, y); c.scale(sz / 24, sz / 24);
+    c.fillStyle = c.strokeStyle = BRAND_COL[kind]; c.lineWidth = 2.2;
+    if (kind === 'instagram') {
+      rr(c, 2, 2, 20, 20, 6); c.stroke();
+      c.beginPath(); c.arc(12, 12, 4.6, 0, 7); c.stroke();
+      c.beginPath(); c.arc(17.4, 6.6, 1.3, 0, 7); c.fill();
+    } else c.fill(new Path2D(BRAND[kind][0]));
+    c.restore();
+  }
   const rowRect = (i) => ({ x: 16, y: 300 + i * 64, w: PW - 32, h: 56 });
   function contact(c) {
     c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, PW, PH); header(c, 'Contact');
@@ -343,8 +360,10 @@ export async function createScreen(renderer) {
     contactRows().forEach((r, i) => {
       const b = rowRect(i);
       c.fillStyle = '#fff'; rr(c, b.x, b.y, b.w, b.h, 12); c.fill();
-      c.textAlign = 'left'; c.fillStyle = '#000'; c.font = `400 13px ${FONT}`; c.fillText(r.label.toLowerCase(), b.x + 16, b.y + 22);
-      c.fillStyle = '#0a84ff'; c.font = `400 17px ${FONT}`; c.fillText(r.value, b.x + 16, b.y + 44);
+      const tx = r.icon ? b.x + 46 : b.x + 16;
+      if (r.icon) brandIcon(c, r.icon, b.x + 16, b.y + 16, 24);
+      c.textAlign = 'left'; c.fillStyle = '#000'; c.font = `400 13px ${FONT}`; c.fillText(r.label.toLowerCase(), tx, b.y + 22);
+      c.fillStyle = '#0a84ff'; c.font = `400 17px ${FONT}`; c.fillText(r.value, tx, b.y + 44);
     });
   }
   function aboutSlide(c) {
@@ -352,7 +371,8 @@ export async function createScreen(renderer) {
     contactRows().forEach((r, i) => {
       const b = { x: 16, y: 560 + i * 52, w: PW - 32, h: 44 };
       c.fillStyle = '#f2f2f7'; rr(c, b.x, b.y, b.w, b.h, 12); c.fill();
-      c.textAlign = 'left'; c.fillStyle = '#8e8e93'; c.font = `400 13px ${FONT}`; c.fillText(r.label, b.x + 14, b.y + 27);
+      if (r.icon) brandIcon(c, r.icon, b.x + 14, b.y + 13, 18);
+      c.textAlign = 'left'; c.fillStyle = '#8e8e93'; c.font = `400 13px ${FONT}`; c.fillText(r.label, r.icon ? b.x + 40 : b.x + 14, b.y + 27);
       c.textAlign = 'right'; c.fillStyle = '#0a84ff'; c.font = `500 15px ${FONT}`; c.fillText(r.value, b.x + b.w - 14, b.y + 28);
     });
   }

@@ -35,6 +35,8 @@ export function createUI(root) {
       <div class="hero-word serif bl sel" id="u-hero">${MARK}</div>
       <div class="hero-cue bl" id="u-cue"><span class="mono">SCROLL</span><span class="chev"></span></div>
     </div>
+    <div class="abs intro" id="u-name"><div class="intro-name serif sel">Hunter Harris</div></div>
+    <div class="abs intro" id="u-role"><div class="intro-role mono sel">visionOS &amp; iOS Engineer</div><div class="intro-line serif sel">Spatial apps for Apple Vision Pro and iPhone.</div></div>
     ${CAPS.map((c) => `<div class="abs cap"><span class="ln"></span><span class="tx mono sel">${c}</span></div>`).join('')}
     <div class="abs dim" id="u-dim"></div>
     <div class="abs cards" id="u-cards">${CARDS.map(cardHTML).join('')}</div>
@@ -119,6 +121,12 @@ export function createUI(root) {
     op(hero, 1 - smooth(range(hq, 0.8, 1)));
     tf(hero, `scale(${(1 + 7 * hq * hq).toFixed(3)})`);
     op(cue, 1 - smooth(range(p, 0.0, 0.05)));
+    const nameEl = $('u-name'), roleEl = $('u-role');
+    const ph = (a, b, c, d) => smooth(range(p, a, b)) * (1 - smooth(range(p, c, d)));
+    op(nameEl, ph(0.11, 0.14, 0.18, 0.21));
+    tf(nameEl, `translateY(${((1 - smooth(range(p, 0.11, 0.14))) * 16).toFixed(1)}px)`);
+    op(roleEl, ph(0.20, 0.23, 0.28, 0.31));
+    tf(roleEl, `translateY(${((1 - smooth(range(p, 0.20, 0.23))) * 16).toFixed(1)}px)`);
 
     // descent captions
     const w = (0.56 - 0.18) / 3;
