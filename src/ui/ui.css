@@ -38,7 +38,7 @@
 .hero { inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .hero-word { font-size:clamp(64px,17vw,300px); letter-spacing:.07em; padding-left:.07em; line-height:1; white-space:nowrap; will-change:transform,opacity; }
 .hero-word i { font-style:italic; }
-.hero-cue { position:absolute; left:0; right:0; bottom:calc(var(--gut) + 56px); display:flex; flex-direction:column; align-items:center; gap:10px; }
+.hero-cue { position:absolute; left:0; right:0; bottom:var(--gut); display:flex; flex-direction:row; align-items:center; justify-content:center; gap:10px; }
 .chev { width:14px; height:14px; border-right:1px solid var(--fg); border-bottom:1px solid var(--fg); transform:rotate(45deg); animation:chev 1.8s ease-in-out infinite; }
 @keyframes chev { 0%,100% { translate:0 -3px; opacity:.4; } 50% { translate:0 4px; opacity:1; } }
 
