@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { toonMaterial } from './toon.js';
 
-// App icons as blade signs off the alley walls (z = ±2.5), facing the camera's final view down +x.
-const ICONS = ['vision3d', 'viralcooker', 'cyberzombies', 'marriott-bonvoy', 'veep-ar', 'vibebike-synthwave-rider', 'demi', 'johnnys-crazy-taxi'];
+// App icons mounted flat on the two alley walls (z = ±2.5) where the camera drops in.
+const ICONS = ['veep-ar', 'demi', 'marriott-bonvoy', 'viralcooker', 'vision3d']; // same 5 as the phone APPS list
 
 export function createSigns() {
   const group = new THREE.Group();
@@ -12,25 +12,23 @@ export function createSigns() {
   const frameMat = toonMaterial();
   const frameGeo = new THREE.BoxGeometry(1, 1, 1);
   frameGeo.setAttribute('color', new THREE.Float32BufferAttribute(new Array(frameGeo.attributes.position.count * 3).fill(0.04), 3));
+  // Two vertical columns, flat on the facing walls, beside the camera's drop into the alley (x -46).
+  // House at cx -45.5 (rows 2 and 3): windows at cx ±1.7, rows y 4.6 / 8.3 / 12.0, so the 2 m gap at cx is clear.
+  const SIZE = 1.5, X = -45.5, ROWS_Y = [4.6, 8.3, 12.0].map((y) => y + 0.85);
   ICONS.forEach((name, i) => {
-    const side = i % 2 ? 1 : -1;               // -1 north wall, +1 south wall
-    const x = -38 + i * 5.2, size = 1.5 + (i % 3) * 0.2;
-    const y = 3.4 + ((i * 1.7) % 2.2);
-    const z = side * (2.5 - 0.25 - size / 2);  // hangs off the wall into the alley
+    const side = i % 2 ? 1 : -1;               // -1 north wall faces +z, +1 south wall faces -z
+    const y = ROWS_Y[Math.floor(i / 2)];
+    const z = side * (2.5 - 0.06);
     const tex = loader.load(`${base}apps/${name}.jpg`);
     tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 8;
     const icon = new THREE.Mesh(plate, toonMaterial({ map: tex }));
-    icon.scale.set(size, size, 1);
-    icon.rotation.y = -Math.PI / 2;            // normal faces -x, toward the camera
-    icon.position.set(x - 0.06, y, z);
+    icon.scale.set(SIZE, SIZE, 1);
+    icon.rotation.y = side < 0 ? 0 : Math.PI;
+    icon.position.set(X, y, z);
     const back = new THREE.Mesh(frameGeo, frameMat);
-    back.scale.set(0.08, size + 0.14, size + 0.14);
-    back.position.set(x, y, z);
-    // bracket from the wall
-    const arm = new THREE.Mesh(frameGeo, frameMat);
-    arm.scale.set(0.06, 0.06, 0.3);
-    arm.position.set(x, y + size / 2 + 0.04, side * 2.35);
-    for (const m of [icon, back, arm]) { m.frustumCulled = false; group.add(m); }
+    back.scale.set(SIZE + 0.16, SIZE + 0.16, 0.06);
+    back.position.set(X, y, side * 2.5);
+    for (const m of [icon, back]) { m.frustumCulled = false; group.add(m); }
   });
   return { group };
 }
