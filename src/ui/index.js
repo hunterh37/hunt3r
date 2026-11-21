@@ -127,12 +127,12 @@ export function createUI(root) {
     op(cue, 1 - smooth(range(p, 0.0, 0.05)));
     const nameEl = $('u-name'), roleEl = $('u-role');
     const ph = (a, b, c, d) => smooth(range(p, a, b)) * (1 - smooth(range(p, c, d)));
-    // name cloud: present at load, drifts up and swells as the camera passes it
-    const nOut = smooth(range(p, 0.08, 0.13));
-    op(nameEl, 1 - nOut);
-    tf(nameEl, `translateY(${(-nOut * 60).toFixed(1)}px) scale(${(1 + nOut * 0.5).toFixed(3)})`);
-    // second cloud: rises in, then passes
-    const rIn = smooth(range(p, 0.12, 0.16)), rOut = smooth(range(p, 0.26, 0.31));
+    // name cloud appears once the camera has dropped through the apple deck (y 790, p ~0.29)
+    const nIn = smooth(range(p, 0.29, 0.32)), nOut = smooth(range(p, 0.38, 0.41));
+    op(nameEl, nIn * (1 - nOut));
+    tf(nameEl, `translateY(${((1 - nIn) * 60 - nOut * 60).toFixed(1)}px) scale(${(0.9 + nIn * 0.1 + nOut * 0.5).toFixed(3)})`);
+    // second cloud follows further down
+    const rIn = smooth(range(p, 0.42, 0.45)), rOut = smooth(range(p, 0.51, 0.54));
     op(roleEl, rIn * (1 - rOut));
     tf(roleEl, `translateY(${((1 - rIn) * 60 - rOut * 60).toFixed(1)}px) scale(${(0.9 + rIn * 0.1 + rOut * 0.5).toFixed(3)})`);
 
