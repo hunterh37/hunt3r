@@ -23,4 +23,4 @@ export function pAtAlt(y) {
 }
 
 // Intro text clouds: real 3D sky clouds under the camera path; the HTML text sits over them.
-export const TEXT_CLOUDS = [{ y: 580, s: 0.62, seed: 21 }, { y: 380, s: 0.62, seed: 34 }];
+export const TEXT_CLOUDS = [{ y: 560, s: 0.62, seed: 21 }, { y: 410, s: 0.62, seed: 34 }];

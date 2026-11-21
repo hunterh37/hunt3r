@@ -3,6 +3,8 @@ import { range, smooth, clamp01, pAtAlt, TEXT_CLOUDS } from '../timeline.js';
 import { CARDS, LAYOUT, cardHTML } from './cards.js';
 
 const CAPS = [];
+// Lines spelled out in the air during the rest of the descent, one character per scroll step.
+const AIR = ['Building spatial apps', 'for Apple Vision Pro and iPhone', 'since 2015,', 'for Fortune 500 teams', 'and early-stage startups.'];
 const fmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
 // Card schedule: starts accelerate, each lasts about 1% of p, overlapping.
@@ -34,7 +36,8 @@ export function createUI(root) {
       <div class="hero-cue bl" id="u-cue"><span class="mono">SCROLL</span><span class="chev"></span></div>
     </div>
     <div class="abs intro" id="u-name"><div class="cloud"><div class="intro-name serif sel">Hunter Harris</div></div></div>
-    <div class="abs intro" id="u-role"><div class="cloud"><div class="intro-role mono sel">visionOS &amp; iOS Engineer</div><div class="intro-line serif sel">Building spatial apps for Apple Vision Pro and iPhone.</div></div></div>
+    <div class="abs intro" id="u-role"><div class="cloud"><div class="intro-line serif sel">visionOS &amp; iOS Engineer</div></div></div>
+    <div class="abs air" id="u-air">${AIR.map((l) => `<div class="air-l serif sel" aria-label="${l}">${[...l].map((ch) => `<span>${ch}</span>`).join('')}</div>`).join('')}</div>
     ${CAPS.map((c) => `<div class="abs cap"><span class="ln"></span><span class="tx mono sel">${c}</span></div>`).join('')}
     <div class="abs dim" id="u-dim"></div>
     <div class="abs cards" id="u-cards">${CARDS.map(cardHTML).join('')}</div>
@@ -78,7 +81,7 @@ export function createUI(root) {
   };
   measure(); addEventListener('resize', measure);
   // text windows: while the camera is 240..90 above each 3D text cloud
-  const WIN = TEXT_CLOUDS.map((c) => [pAtAlt(c.y + 240), pAtAlt(c.y + 190), pAtAlt(c.y + 125), pAtAlt(c.y + 95)]);
+  const WIN = TEXT_CLOUDS.map((c) => [pAtAlt(c.y + 215), pAtAlt(c.y + 180), pAtAlt(c.y + 125), pAtAlt(c.y + 95)]);
 
   // write-if-changed cache
   const cache = new WeakMap();
@@ -126,6 +129,17 @@ export function createUI(root) {
       const tin = smooth(range(p, a0, a1)), tout = smooth(range(p, b0, b1));
       op(el, tin * (1 - tout));
       tf(el, `scale(${(0.7 + 0.6 * range(p, a0, b1)).toFixed(3)})`);
+    });
+
+    // air text: spelled out between the last text cloud and the ground
+    const airEl = $('u-air');
+    const A0 = WIN[1][3] + 0.005, A1 = 0.545, L = AIR.length;
+    op(airEl, 1 - smooth(range(p, 0.55, 0.565)));
+    airEl.querySelectorAll('.air-l').forEach((line, li) => {
+      const q = range(p, A0 + ((A1 - A0) * li) / L, A0 + ((A1 - A0) * (li + 0.85)) / L);
+      const spans = line.children, n = Math.round(q * spans.length);
+      op(line, q > 0 ? 1 : 0);
+      for (let k = 0; k < spans.length; k++) op(spans[k], k < n ? 1 : 0);
     });
 
     // descent captions

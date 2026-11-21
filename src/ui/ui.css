@@ -171,3 +171,9 @@
 /* intro text sits on 3D sky clouds (TEXT_CLOUDS in timeline.js) */
 .cloud { display:flex; flex-direction:column; align-items:center; gap:14px; max-width:min(80vw,900px); }
 .cloud .intro-name, .cloud .intro-role, .cloud .intro-line { color:#0a0a0a; text-shadow:0 0 14px #f4f2ec, 0 0 4px #f4f2ec; }
+
+/* air text: lines stacked down the left side, typed in by scroll */
+.air { left:calc(var(--gut) + 12px); top:50%; transform:translateY(-50%); z-index:2; pointer-events:none; display:flex; flex-direction:column; gap:.2em; font-size:clamp(26px,3.6vw,56px); line-height:1.08; max-width:calc(100vw - 2 * var(--gut) - 24px); }
+.air { align-items:flex-start; }
+.air-l { color:var(--ink); background:var(--paper); padding:.06em .3em .12em; width:fit-content; white-space:pre-wrap; opacity:0; }
+.air-l span { opacity:0; }
