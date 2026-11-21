@@ -4,6 +4,7 @@ import { toonMaterial, shared } from './toon.js';
 import { createPost } from './post.js';
 import { buildCity } from './city.js';
 import { createSky } from './sky.js';
+import { createSigns } from './signs.js';
 
 const D2R = Math.PI / 180;
 
@@ -15,6 +16,7 @@ export async function createWorld({ renderer }) {
 
   const mat = toonMaterial();
   scene.add(buildCity(mat).group);
+  scene.add(createSigns().group);
 
   const sky = createSky(mat, camera, reduced);
   scene.add(sky.group);
