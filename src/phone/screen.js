@@ -159,34 +159,13 @@ export async function createScreen(renderer) {
     c.restore();
   }
 
-  const CARD_W = (PW - 20 * 2 - 14) / 2, CARD_H = 142;
-  const cardRect = (i) => ({ x: 20 + (i % 2) * (CARD_W + 14), y: 128 + Math.floor(i / 2) * (CARD_H + 56), w: CARD_W, h: CARD_H + 40 });
-  function portfolio(c) {
-    c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, PW, PH);
-    c.fillStyle = '#000'; c.textAlign = 'left'; c.font = `700 34px ${FONT}`; c.fillText('Apps', 20, 104);
-    c.fillStyle = 'rgba(120,120,128,.16)'; c.beginPath(); c.arc(PW - 38, 88, 17, 0, 7); c.fill();
-    c.fillStyle = '#8a8a8e'; for (let i = -1; i <= 1; i++) { c.beginPath(); c.arc(PW - 38 + i * 6, 88, 1.8, 0, 7); c.fill(); }
-    const cw = CARD_W, ch = CARD_H;
-    APPS.forEach(([, name], i) => {
-      const { x, y } = cardRect(i);
-      c.save(); c.shadowColor = 'rgba(0,0,0,.18)'; c.shadowBlur = 10; c.shadowOffsetY = 3; c.fillStyle = '#fff'; rr(c, x, y, cw, ch, 18); c.fill(); c.restore();
-      c.save(); rr(c, x, y, cw, ch, 18); c.clip(); cover(c, apps[i], x, y, cw, ch); c.restore();
-      c.fillStyle = '#000'; c.font = `600 14px ${FONT}`; c.textAlign = 'left';
-      // wrap name in two lines
-      const words = name.split(' '); let l1 = '', l2 = '';
-      for (const w of words) { if (c.measureText((l1 + ' ' + w).trim()).width < cw - 4 && !l2) l1 = (l1 + ' ' + w).trim(); else l2 = (l2 + ' ' + w).trim(); }
-      c.fillText(l1, x + 2, y + ch + 20); if (l2) c.fillText(l2, x + 2, y + ch + 37);
-    });
-  }
-
   let lastKey = '';
-  // Scroll story on the phone: photos scroll, one opens, app screen, then the About slide.
+  // Scroll story on the phone: photos scroll, one opens, then the About slide.
   function paintAuto(p) {
     const sy = LIB_MAX * 0.7 * sstep(0.80, 0.885, p);
     const open = ease(clamp((p - 0.885) / 0.03));        // grid cell -> full screen
     const fade = ease(clamp((p - 0.92) / 0.025));        // viewer -> app screen
-    const slide = ease(clamp((p - 0.955) / 0.03));       // app screen -> About slide
-    const key = `${sy | 0}|${(open * 40) | 0}|${(fade * 40) | 0}|${(slide * 60) | 0}`;
+    const key = `${sy | 0}|${(open * 40) | 0}|${(fade * 40) | 0}`;
     if (key === lastKey) return;
     lastKey = key;
     const c = ctx; c.setTransform(S, 0, 0, S, 0, 0);
@@ -208,11 +187,7 @@ export async function createScreen(renderer) {
     }
     if (fade > 0.001) {
       c.save(); c.globalAlpha = fade;
-      if (slide < 0.999) portfolio(c);
-      if (slide > 0.001) {
-        c.save(); c.globalAlpha = fade * slide;
-        c.fillStyle = '#fff'; c.fillRect(0, 0, PW, PH); aboutSlide(c); c.restore();
-      }
+      c.fillStyle = '#fff'; c.fillRect(0, 0, PW, PH); aboutSlide(c);
       statusBar(c, '#000'); homeBar(c, '#000'); c.restore();
     }
     island(c);
@@ -239,7 +214,7 @@ export async function createScreen(renderer) {
   const octx = off.getContext('2d');
   const ICON = 62, ICOLS = 4, IGAP = (PW - 2 * 24 - ICOLS * ICON) / (ICOLS - 1);
   const HOME = [
-    { id: 'work', name: 'Work', app: 'work' }, { id: 'about', name: 'About', app: 'about' },
+    { id: 'about', name: 'About', app: 'about' },
     { id: 'contact', name: 'Contact', app: 'contact' }, { id: 'photos', name: 'Photos', app: 'library' },
     ...APPS.map(([, name, url], i) => ({ id: 'a' + i, name, url, img: i })),
   ];
@@ -255,7 +230,7 @@ export async function createScreen(renderer) {
 
   function glyph(c, id, r) {
     const { x, y, w } = r, cx = x + w / 2, cy = y + w / 2;
-    const bg = { work: ['#1c1c1e', '#3a3a3c'], about: ['#8e8e93', '#c7c7cc'], contact: ['#d1d1d6', '#f2f2f7'], photos: ['#fff', '#fff'],
+    const bg = { about: ['#8e8e93', '#c7c7cc'], contact: ['#d1d1d6', '#f2f2f7'], photos: ['#fff', '#fff'],
       phone: ['#34c759', '#5ee07c'], messages: ['#34c759', '#5ee07c'], mail: ['#0a84ff', '#5ac8fa'] }[id];
     const g = c.createLinearGradient(0, y + w, 0, y); g.addColorStop(0, bg[0]); g.addColorStop(1, bg[1]);
     c.save(); rr(c, x, y, w, w, w * 0.225); c.fillStyle = g; c.fill(); c.clip();
@@ -263,9 +238,6 @@ export async function createScreen(renderer) {
     if (id === 'photos') {
       const cols = ['#ff9f0a', '#ffd60a', '#a3e635', '#34c759', '#5ac8fa', '#0a84ff', '#bf5af2', '#ff375f'];
       for (let i = 0; i < 8; i++) { c.save(); c.translate(cx, cy); c.rotate(i * Math.PI / 4); c.globalAlpha = 0.85; c.fillStyle = cols[i]; c.beginPath(); c.ellipse(0, -11, 6.5, 11, 0, 0, 7); c.fill(); c.restore(); }
-    } else if (id === 'work') {
-      rr(c, cx - 17, cy - 9, 34, 24, 4); c.fill(); c.lineWidth = 3; rr(c, cx - 7, cy - 16, 14, 9, 3); c.stroke();
-      c.fillStyle = '#2c2c2e'; c.fillRect(cx - 17, cy + 1, 34, 2.5);
     } else if (id === 'about') {
       c.beginPath(); c.arc(cx, cy - 7, 9, 0, 7); c.fill(); c.beginPath(); c.ellipse(cx, cy + 20, 19, 14, 0, Math.PI, 0); c.fill();
     } else if (id === 'contact') {
@@ -376,10 +348,9 @@ export async function createScreen(renderer) {
       c.textAlign = 'right'; c.fillStyle = '#0a84ff'; c.font = `500 15px ${FONT}`; c.fillText(r.value, b.x + b.w - 14, b.y + 28);
     });
   }
-  const APP_BAR = { library: '#000', work: '#000', about: '#000', contact: '#000' };
+  const APP_BAR = { library: '#000', about: '#000', contact: '#000' };
   function drawApp(c, app) {
     if (app === 'library') { library(c, st.scroll); libraryChrome(c, 1); tabBar(c, 1); }
-    else if (app === 'work') portfolio(c);
     else if (app === 'about') aboutSlide(c);
     else contact(c);
     statusBar(c, APP_BAR[app]); homeBar(c, '#000');
@@ -393,7 +364,7 @@ export async function createScreen(renderer) {
   const st = { mode: 'auto', app: 'library', k: 1, kTo: 1, lift: 0, scroll: 0, g: null, last: performance.now() };
   function setInteractive(p) {
     if (st.mode !== 'auto') return;
-    st.mode = 'live'; st.p0 = p; st.app = p > 0.97 ? 'about' : p > 0.925 ? 'work' : 'library'; st.k = st.kTo = 1; st.lift = 0; st.scroll = 0;
+    st.mode = 'live'; st.p0 = p; st.app = p > 0.925 ? 'about' : 'library'; st.k = st.kTo = 1; st.lift = 0; st.scroll = 0;
   }
   function openApp(app) { st.app = app; st.kTo = 1; if (st.k > 0.99) st.k = 0; st.scroll = app === 'library' ? st.scroll : 0; }
   function goHome() { st.kTo = 0; }
@@ -451,7 +422,6 @@ export async function createScreen(renderer) {
       return;
     }
     if (y > PH - 34) { goHome(); return; }
-    if (st.app === 'work') { const i = APPS.findIndex((_, j) => hit(cardRect(j), x, y, 0)); if (i >= 0) window.open(APPS[i][2], '_blank', 'noopener'); }
     if (st.app === 'contact' || st.app === 'about') {
       const rows2 = contactRows(), j2 = rows2.findIndex((_, j) => hit({ x: 16, y: 560 + j * 52, w: PW - 32, h: 44 }, x, y, 0));
       if (st.app === 'about') { if (j2 >= 0) { const r = rows2[j2]; if (r.ext) window.open(r.href, '_blank', 'noopener'); else location.href = r.href; } return; }
