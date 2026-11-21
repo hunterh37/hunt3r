@@ -6,7 +6,7 @@ const vert = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(positi
 const frag = /* glsl */ `
 uniform sampler2D tColor, tAux;
 uniform vec2 uRes, uTan;
-uniform float uLine, uWhite, uBoil, uCell;
+uniform float uLine, uWhite, uBoil, uCell, uSpeed;
 uniform vec3 uF, uR, uU, uPaper, uMid, uInk, uHaze;
 varying vec2 vUv;
 
@@ -63,7 +63,30 @@ void main(){
   }
   float line = smoothstep(0.35, 0.75, edge) * strength;
   col = mix(col, mix(uInk, uHaze * 0.45, fade * 0.8), line);
-  col = mix(col, uPaper, uWhite);
+  // fall speed lines: ink wedges from the frame edge toward the centre, redrawn on the boil clock
+  if (uSpeed > 0.01) {
+    vec2 asp = vec2(uRes.x / uRes.y, 1.0);
+    vec2 c = (vUv - 0.5) * asp;
+    float r = length(c) / (0.5 * length(asp));
+    float af = (atan(c.y, c.x) / 6.28318 + 0.5) * 150.0;
+    float id = floor(af);
+    float h = hash(vec2(id, uBoil)), h2 = hash(vec2(id + 31.0, uBoil));
+    float start = mix(1.0, 0.5, uSpeed) + 0.3 * h2;
+    float w = clamp((r - start) * 2.2, 0.0, 1.0) * 0.32;
+    float sl = (1.0 - smoothstep(w - 0.1, w, abs(fract(af) - 0.5))) * step(0.72, h) * step(0.001, w);
+    col = mix(col, uInk, sl * smoothstep(0.02, 0.2, uSpeed));
+  }
+  // cloud pass-through: paper halftone dots with an ink rim grow until they close the frame
+  if (uWhite > 0.001) {
+    float cov = min(1.0, uWhite / 0.9);
+    vec2 q = mat2(0.7071, 0.7071, -0.7071, 0.7071) * fc / (uCell * 5.0);
+    vec2 cell = floor(q);
+    float d = length(fract(q) - 0.5);
+    float rad = cov * (0.66 + 0.18 * hash(cell)) + 0.1 * (vnoise(q * 0.35 + uBoil) - 0.5) * cov;
+    float rim = (1.0 - smoothstep(0.0, 0.05, abs(d - rad))) * (1.0 - smoothstep(0.45, 0.62, rad));
+    col = mix(col, uInk, rim * 0.85);
+    col = mix(col, uPaper, max(1.0 - smoothstep(rad - 0.04, rad, d), smoothstep(0.8, 1.0, cov)));
+  }
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -76,7 +99,7 @@ export function createPost(renderer, scene, camera) {
     uniforms: {
       tColor: { value: rt.textures[0] }, tAux: { value: rt.textures[1] },
       uRes: { value: new THREE.Vector2(size.x, size.y) }, uTan: { value: new THREE.Vector2(0.5, 0.5) },
-      uLine: { value: 1.2 }, uWhite: { value: 0 }, uBoil: { value: 0 }, uCell: shared.uCell,
+      uLine: { value: 1.2 }, uWhite: { value: 0 }, uBoil: { value: 0 }, uSpeed: { value: 0 }, uCell: shared.uCell,
       uF: { value: new THREE.Vector3(0, 0, -1) }, uR: { value: new THREE.Vector3(1, 0, 0) }, uU: { value: new THREE.Vector3(0, 1, 0) },
       uPaper: shared.uPaper, uMid: shared.uMid, uInk: shared.uInk, uHaze: shared.uHaze,
     },
@@ -104,6 +127,7 @@ export function createPost(renderer, scene, camera) {
     resize,
     set white(v) { mat.uniforms.uWhite.value = v; },
     set boil(v) { mat.uniforms.uBoil.value = v; },
+    set speed(v) { mat.uniforms.uSpeed.value = v; },
     render(r) {
       camera.updateMatrixWorld();
       e.copy(camera.matrixWorld);
