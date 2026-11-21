@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mulberry } from './builder.js';
 import { AMBER, toonMaterial } from './toon.js';
 import { cloudDeck, iconCloud } from './shapes.js';
-import { range, smooth, easeInOutCubic, lerp } from '../timeline.js';
+import { range, smooth, easeInOutCubic, lerp, TEXT_CLOUDS } from '../timeline.js';
 
 // Camera xz during the descent at altitude y (mirrors pose() in world/index.js).
 function camAt(y) {
@@ -106,6 +106,18 @@ export function createSky(sunMat, camera, reduced) {
   sun.frustumCulled = false;
   group.add(sun);
 
+  // Clouds that carry the intro text, centred under the camera path, long axis across the screen.
+  const textClouds = TEXT_CLOUDS.map((tc) => {
+    const m = new THREE.Mesh(clusterGeo(tc.seed), mat);
+    const c = camAt(tc.y);
+    m.position.set(c.x, tc.y, c.z);
+    m.rotation.y = Math.PI / 2;
+    m.scale.set(tc.s, tc.s * 0.8, tc.s * 1.25);
+    m.frustumCulled = false;
+    group.add(m);
+    return m;
+  });
+
   // Deck the camera falls through: apple.
   const decks = [
     { shape: 'apple', y: 790, size: 62, seed: 11 },
@@ -140,6 +152,8 @@ export function createSky(sunMat, camera, reduced) {
       });
       iconMeshes.forEach((m, i) => { m.position.x = reduced ? 0 : 6 * Math.sin(t * 0.12 + i); });
       sun.quaternion.copy(camera.quaternion);
+      // hide a text cloud just before the camera would clip into it
+      textClouds.forEach((m) => { m.visible = camera.position.y > m.position.y + 75; });
     },
     whiteout(cp) {
       let w = 0;

@@ -1,7 +1,6 @@
 import './ui.css';
-import { range, smooth, clamp01 } from '../timeline.js';
+import { range, smooth, clamp01, pAtAlt, TEXT_CLOUDS } from '../timeline.js';
 import { CARDS, LAYOUT, cardHTML } from './cards.js';
-import { cloudSVG } from './cloud.js';
 
 const CAPS = [];
 const fmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
@@ -78,14 +77,8 @@ export function createUI(root) {
     });
   };
   measure(); addEventListener('resize', measure);
-  // toon clouds behind the intro text, rebuilt to the text block size
-  const clouds = [...root.querySelectorAll('.cloud')];
-  const drawClouds = () => clouds.forEach((el, i) => {
-    el.querySelector('.cloud-bg')?.remove();
-    el.insertAdjacentHTML('afterbegin', cloudSVG(el.offsetWidth, el.offsetHeight, 7 + i * 11));
-  });
-  drawClouds(); addEventListener('resize', drawClouds);
-  document.fonts?.ready.then(drawClouds);
+  // text windows: while the camera is 240..90 above each 3D text cloud
+  const WIN = TEXT_CLOUDS.map((c) => [pAtAlt(c.y + 240), pAtAlt(c.y + 190), pAtAlt(c.y + 125), pAtAlt(c.y + 95)]);
 
   // write-if-changed cache
   const cache = new WeakMap();
@@ -127,14 +120,13 @@ export function createUI(root) {
     op(cue, 1 - smooth(range(p, 0.0, 0.05)));
     const nameEl = $('u-name'), roleEl = $('u-role');
     const ph = (a, b, c, d) => smooth(range(p, a, b)) * (1 - smooth(range(p, c, d)));
-    // name cloud appears once the camera has dropped through the apple deck (y 790, p ~0.29)
-    const nIn = smooth(range(p, 0.29, 0.32)), nOut = smooth(range(p, 0.38, 0.41));
-    op(nameEl, nIn * (1 - nOut));
-    tf(nameEl, `translateY(${((1 - nIn) * 60 - nOut * 60).toFixed(1)}px) scale(${(0.9 + nIn * 0.1 + nOut * 0.5).toFixed(3)})`);
-    // second cloud follows further down
-    const rIn = smooth(range(p, 0.42, 0.45)), rOut = smooth(range(p, 0.51, 0.54));
-    op(roleEl, rIn * (1 - rOut));
-    tf(roleEl, `translateY(${((1 - rIn) * 60 - rOut * 60).toFixed(1)}px) scale(${(0.9 + rIn * 0.1 + rOut * 0.5).toFixed(3)})`);
+    // text rides the 3D clouds: grows with them as the camera drops
+    [nameEl, roleEl].forEach((el, i) => {
+      const [a0, a1, b0, b1] = WIN[i];
+      const tin = smooth(range(p, a0, a1)), tout = smooth(range(p, b0, b1));
+      op(el, tin * (1 - tout));
+      tf(el, `scale(${(0.7 + 0.6 * range(p, a0, b1)).toFixed(3)})`);
+    });
 
     // descent captions
     const w = (0.56 - 0.18) / 3;
