@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { toonMaterial } from './toon.js';
 
 // App icons mounted flat on the two alley walls (z = ±2.5) where the camera drops in.
-const ICONS = ['veep-ar', 'demi', 'marriott-bonvoy', 'viralcooker', 'vision3d']; // same 5 as the phone APPS list
+const ICONS = ['veep-ar', 'demi', 'marriott-bonvoy', 'viralcooker', 'vision3d', 'whop']; // phone APPS list plus Whop (top row, south wall)
 
 export function createSigns() {
   const group = new THREE.Group();
