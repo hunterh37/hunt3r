@@ -1,0 +1,7 @@
+About bio options (space: about 9 lines at 16px, ~400 characters)
+
+1. I build worlds you can step into. Since 2015 I've been turning wild ideas into immersive, interactive apps for iPhone, iPad and Apple Vision Pro, from immersive 3d painting / CAD experiences to boxing rings in your living room. I've consulted for startups and Fortune 500 teams to help build their vision, and yours could be next! Just get in touch with me on any of the platforms below.
+
+2. Part engineer, part toymaker. I make immersive experiences that feel like play: things you can punch, paint, pet and walk around. I've shipped apps across iPhone, iPad and Vision Pro, and helped startups and Fortune 500 companies bring their boldest spatial ideas to life. If it sparkles, moves or makes someone grin, I probably want to build it.
+
+3. I'm happiest when the screen disappears and you're just inside the thing. That's what I chase every day: interactive, immersive experiences on iPhone, iPad and Apple Vision Pro, built in Swift and RealityKit. Startups and Fortune 500 companies bring me in when they want something people will remember, then I design, code and ship it end to end.

@@ -290,8 +290,7 @@ export async function createScreen(renderer) {
     else { c.fillStyle = '#d1d1d6'; c.beginPath(); c.arc(PW / 2, 196, 52, 0, 7); c.fill();
     c.fillStyle = '#fff'; c.font = `600 38px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 210); }
     c.fillStyle = '#000'; c.font = `600 22px ${FONT}`; c.fillText(CONTACT.name, PW / 2, 286);
-    const paras = ['I build immersive, interactive experiences for iPhone, iPad and Apple Vision Pro.',
-      'I have consulted for startups and Fortune 500 companies.'];
+    const paras = ["I build worlds you can step into. Since 2015 I've been turning wild ideas into immersive, interactive apps for iPhone, iPad and Apple Vision Pro, from immersive 3D painting and CAD experiences to boxing rings in your living room. I've consulted for startups and Fortune 500 teams to help build their vision, and yours could be next! Just get in touch with me on any of the platforms below."];
     c.textAlign = 'left'; c.font = `400 16px ${FONT}`; c.fillStyle = '#3a3a3c';
     let y = 334;
     for (const t of paras) {
