@@ -24,3 +24,22 @@ export function pAtAlt(y) {
 
 // Intro text clouds: real 3D sky clouds under the camera path; the HTML text sits over them.
 export const TEXT_CLOUDS = [{ y: 560, s: 0.62, seed: 21 }, { y: 410, s: 0.62, seed: 34 }];
+
+// Ground walk path (world/index.js pose, world/ar.js chevrons, ui HUD): alley z 0 from x 38 to 60,
+// quarter arc (r 4) right round the corner, then +z up the cross street toward the Comm Ave trees.
+export const W1 = 22, WR = 4, WA = (Math.PI / 2) * WR, W3 = 8, WALK_L = W1 + WA + W3;
+export function walkAt(s) {
+  if (s <= W1) return { x: 38 + s, z: 0, turn: 0 };
+  if (s <= W1 + WA) { const u = (s - W1) / WA, th = u * Math.PI / 2; return { x: 60 + WR * Math.sin(th), z: WR - WR * Math.cos(th), turn: u }; }
+  return { x: 64, z: WR + (s - W1 - WA), turn: 1 };
+}
+// Ground beat phases in p (0.68..0.80).
+export const G = {
+  on0: 0.680, on1: 0.689, on2: 0.698, drop: 0.705,   // hand raises glasses, puts them on, drops
+  walk0: 0.700, walk1: 0.760,                         // walk + GPS
+  paint0: 0.758, draw0: 0.763, draw1: 0.776,          // hand up, pinch-paint "hello :)"
+  track0: 0.777, track1: 0.786,                       // hand down, glasses track the passing cars
+  off0: 0.786, off1: 0.791, off2: 0.798,              // hand up to the glasses, take them off, lower away
+  hud0: 0.695, hud1: 0.701, hud2: 0.789, hud3: 0.794, // HUD worn
+};
+export const walkS = (p) => WALK_L * smooth(range(p, G.walk0, G.walk1));

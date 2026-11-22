@@ -25,9 +25,13 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// Montage beat (0.68..0.80) is skipped: page scroll f maps to p with that range cut out.
-const CUT0 = 0.68, CUT = 0.12;
-const skip = (f) => { f *= 1 - CUT; return f < CUT0 ? f : f + CUT; };
+// Page scroll f -> timeline p. Descent gets less scroll so the ground arrives sooner;
+// 0.68..0.80 is the ground walk, corner and colour spread.
+const FK = [0, 0.10, 0.32, 0.40, 0.70, 1], PK = [0, 0.14, 0.56, 0.68, 0.80, 1];
+const skip = (f) => {
+  for (let i = 1; i < FK.length; i++) if (f <= FK[i]) return PK[i - 1] + (PK[i] - PK[i - 1]) * (f - FK[i - 1]) / (FK[i] - FK[i - 1]);
+  return 1;
+};
 let target = 0, f = 0, p = frozen ?? 0;
 const readScroll = () => {
   const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -46,7 +50,7 @@ function frame() {
 
   world.update(p, t, dt);
   phone.update(p, t, dt);
-  ui.update(p, t);
+  ui.update(p, t, world.detections);
 
   renderer.setRenderTarget(null);
   renderer.clear();

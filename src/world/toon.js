@@ -14,6 +14,9 @@ export const shared = {
   uFog: { value: 0.0007 },
   uFogMax: { value: 0.7 },
   uCell: { value: 5 },
+  uColO: { value: new THREE.Vector3(63, 6, 41) },
+  uColTree: { value: 0 },
+  uColAll: { value: 0 },
 };
 
 const vert = /* glsl */ `
@@ -43,7 +46,8 @@ void main(){
 
 const frag = /* glsl */ `
 uniform vec3 uLight, uPaper, uMid, uInk, uHaze;
-uniform float uFog, uFogMax, uCell;
+uniform float uFog, uFogMax, uCell, uColTree, uColAll;
+uniform vec3 uColO;
 #ifdef HAS_TEX
 uniform sampler2D uMap; varying vec2 vUv;
 #endif
@@ -97,6 +101,26 @@ void main(){
       float tick = smoothstep(0.94, 0.985, fract(u * 1.6 + row * 0.5)) * (1.0 - course);
       col = mix(col, uInk, max(course, tick) * 0.5 * near);
     }
+  }
+  #endif
+  #if !defined(HAS_TEX) && !defined(IS_CLOUD)
+  if (uColAll + uColTree > 0.01 && sat <= 0.15) {
+    // tag rides in g - r (0.01 steps): 1 canopy 2 trunk 3 brick 5/6 car 7 asphalt 8 grass 9 slate
+    float tag = floor((vC.g - vC.r) * 100.0 + 0.5);
+    vec3 tint = vec3(1.0, 0.95, 0.86);
+    if (tag == 1.0) tint = vec3(0.42, 0.8, 0.36);
+    else if (tag == 2.0) tint = vec3(0.66, 0.46, 0.3);
+    else if (tag == 3.0) tint = vec3(0.93, 0.56, 0.42);
+    else if (tag == 5.0) tint = vec3(0.92, 0.3, 0.26);
+    else if (tag == 6.0) tint = vec3(0.32, 0.52, 0.9);
+    else if (tag == 7.0) tint = vec3(0.78, 0.8, 0.86);
+    else if (tag == 8.0) tint = vec3(0.62, 0.86, 0.46);
+    else if (tag == 9.0) tint = vec3(0.56, 0.62, 0.78);
+    float d = distance(vW, uColO) + (vn(vW.xz * 0.35 + vW.y * 0.2) - 0.5) * 8.0;
+    float isTree = tag == 1.0 || tag == 2.0 ? 1.0 : 0.0;
+    float k = max(isTree * smoothstep(uColTree, uColTree - 6.0, d), smoothstep(uColAll, uColAll - 10.0, d));
+    k *= step(0.01, uColAll + uColTree * isTree);
+    col = mix(col, col * tint * 1.06, k);
   }
   #endif
   vec3 fogCol = mix(uPaper, uHaze, 0.5);

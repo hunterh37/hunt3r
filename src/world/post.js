@@ -8,7 +8,7 @@ uniform sampler2D tColor, tAux;
 uniform vec2 uRes, uTan;
 uniform float uLine, uWhite, uBoil, uCell, uSpeed;
 uniform vec3 uF, uR, uU, uPaper, uMid, uInk, uHaze;
-uniform float uSun, uSunT, uSunA;
+uniform float uSun, uSunT, uSunA, uColor;
 uniform vec2 uSunO, uPtr;
 uniform vec3 uSunC[4];
 varying vec2 vUv;
@@ -74,6 +74,7 @@ void main(){
     vec3 hz = mix(uPaper, uHaze, 0.62);
     col = mix(uPaper, hz, dots(g * 1.25));
     col = mix(col, mix(uPaper, uHaze, 0.25), (1.0 - smoothstep(-0.2, 0.12, ray.y)) * 0.6);
+    col = mix(col, col * mix(vec3(1.0, 0.9, 0.78), vec3(0.62, 0.8, 1.0), smoothstep(0.0, 0.5, ray.y)), uColor);
   }
   float line = smoothstep(0.35, 0.75, edge) * strength;
   col = mix(col, mix(uInk, uHaze * 0.45, fade * 0.8), line);
@@ -139,7 +140,7 @@ export function createPost(renderer, scene, camera) {
       uLine: { value: 1.2 }, uWhite: { value: 0 }, uBoil: { value: 0 }, uSpeed: { value: 0 }, uCell: shared.uCell,
       uF: { value: new THREE.Vector3(0, 0, -1) }, uR: { value: new THREE.Vector3(1, 0, 0) }, uU: { value: new THREE.Vector3(0, 1, 0) },
       uPaper: shared.uPaper, uMid: shared.uMid, uInk: shared.uInk, uHaze: shared.uHaze,
-      uSun: { value: 0 }, uSunT: { value: 0 }, uSunA: { value: 0 }, uSunO: { value: new THREE.Vector2() }, uPtr: { value: new THREE.Vector2(0.5, 0.5) },
+      uColor: { value: 0 }, uSun: { value: 0 }, uSunT: { value: 0 }, uSunA: { value: 0 }, uSunO: { value: new THREE.Vector2() }, uPtr: { value: new THREE.Vector2(0.5, 0.5) },
       uSunC: { value: [0, 1, 2, 3].map(() => new THREE.Vector3(1, 0, 0)) },
     },
     vertexShader: vert, fragmentShader: frag, depthTest: false, depthWrite: false,
@@ -168,6 +169,7 @@ export function createPost(renderer, scene, camera) {
     set boil(v) { mat.uniforms.uBoil.value = v; },
     set speed(v) { mat.uniforms.uSpeed.value = v; },
     set sun(v) { mat.uniforms.uSun.value = v; },
+    set color(v) { mat.uniforms.uColor.value = v; },
     set sunTime(v) { mat.uniforms.uSunT.value = v; },
     // s from makeSunset(), ptr is a Vector2 kept by reference
     setSunset(s, ptr) {

@@ -281,18 +281,19 @@ export async function createScreen(renderer) {
     c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(0, PH - 110, PW, 92); c.restore();
     DOCK.forEach((d, i) => drawIcon(c, d, dockRect(i)));
   }
-  function header(c, title) {
-    c.fillStyle = '#000'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.font = `700 34px ${FONT}`; c.fillText(title, 20, 104);
+  function header(c, title, y = 104) {
+    c.fillStyle = '#000'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.font = `700 34px ${FONT}`; c.fillText(title, 20, y);
   }
   function about(c) {
-    c.fillStyle = '#fff'; c.fillRect(0, 0, PW, PH); header(c, 'About');
-    if (avatar) { c.save(); c.beginPath(); c.arc(PW / 2, 196, 52, 0, 7); c.clip(); cover(c, avatar, PW / 2 - 52, 196 - 52, 104, 104); c.restore(); c.textAlign = 'center'; }
-    else { c.fillStyle = '#d1d1d6'; c.beginPath(); c.arc(PW / 2, 196, 52, 0, 7); c.fill();
-    c.fillStyle = '#fff'; c.font = `600 38px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 210); }
-    c.fillStyle = '#000'; c.font = `600 22px ${FONT}`; c.fillText(CONTACT.name, PW / 2, 286);
-    const paras = ["I build worlds you can step into. Since 2015 I've been turning wild ideas into immersive, interactive apps for iPhone, iPad and Apple Vision Pro, from immersive 3D painting and CAD experiences to boxing rings in your living room. I've consulted for startups and Fortune 500 teams to help build their vision, and yours could be next! Just get in touch with me on any of the platforms below."];
+    c.fillStyle = '#fff'; c.fillRect(0, 0, PW, PH); header(c, 'About', 92);
+    if (avatar) { c.save(); c.beginPath(); c.arc(PW / 2, 160, 52, 0, 7); c.clip(); cover(c, avatar, PW / 2 - 52, 160 - 52, 104, 104); c.restore(); c.textAlign = 'center'; }
+    else { c.fillStyle = '#d1d1d6'; c.beginPath(); c.arc(PW / 2, 160, 52, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.font = `600 38px ${FONT}`; c.textAlign = 'center'; c.fillText('HH', PW / 2, 174); }
+    c.fillStyle = '#000'; c.font = `600 22px ${FONT}`; c.fillText(CONTACT.name, PW / 2, 246);
+    const paras = ["I build worlds you can step into. Since 2015 I've been turning wild ideas into immersive, interactive apps for iPhone, iPad and Apple Vision Pro. From immersive 3D painting and CAD experiences to boxing rings in your living room.",
+      "I've consulted for startups and Fortune 500 teams to help build their vision, and yours could be next! Just get in touch with me on any of the platforms below."];
     c.textAlign = 'left'; c.font = `400 16px ${FONT}`; c.fillStyle = '#3a3a3c';
-    let y = 334;
+    let y = 286;
     for (const t of paras) {
       let line = '';
       for (const w of t.split(' ')) { const n = line ? line + ' ' + w : w; if (c.measureText(n).width > PW - 48) { c.fillText(line, 24, y); y += 23; line = w; } else line = n; }
@@ -325,6 +326,41 @@ export async function createScreen(renderer) {
     c.restore();
   }
   const rowRect = (i) => ({ x: 16, y: 300 + i * 64, w: PW - 32, h: 56 });
+  // CONTACT button: social rows glow and bounce; repeat presses spotlight LinkedIn.
+  const hl = { t0: 0, n: 0, pending: false, last: 0 };
+  window.addEventListener('contact-press', () => {
+    const now = performance.now();
+    hl.n = now - hl.last < 10000 ? hl.n + 1 : 1; hl.last = now;
+    if (hl.t0 && now - hl.t0 < 6000) hl.t0 = now; else hl.pending = true;
+  });
+  const hlActive = () => hl.t0 && performance.now() - hl.t0 < (hl.n > 1 ? 6000 : 3000);
+  function rowFx(r, i) {
+    if (!r.ext || !hlActive()) return null;
+    const focus = hl.n > 1, li = r.icon === 'linkedin';
+    const t = (performance.now() - hl.t0) / 1000 - (focus ? 0 : i * 0.09);
+    if (t <= 0) return null;
+    const dur = focus ? 6 : 3;
+    let env = clamp(t / 0.18) * clamp((dur - t) / 0.7);
+    let amp = 0.05;
+    if (focus) {
+      if (li) { env *= 0.75 + 0.25 * Math.sin(t * 6); amp = 0.11; }
+      else { env *= 0.18; amp = 0; }
+    }
+    const bounce = 1 + amp * Math.exp(-2.6 * (t % (focus && li ? 1.4 : 99))) * Math.sin(t % (focus && li ? 1.4 : 99) * 16);
+    return { env, s: bounce, col: BRAND_COL[r.icon] || '#0a84ff', big: focus && li };
+  }
+  function fxBegin(c, b, f) {
+    if (!f) return;
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    c.translate(cx, cy); c.scale(f.s, f.s); c.translate(-cx, -cy);
+    c.shadowColor = f.col; c.shadowBlur = (f.big ? 34 : 18) * f.env;
+  }
+  function fxEdge(c, b, f, rad) {
+    c.shadowBlur = 0; if (!f) return;
+    c.save(); c.globalAlpha = f.env * (f.big ? 1 : 0.8); c.strokeStyle = f.col; c.lineWidth = f.big ? 3 : 2;
+    rr(c, b.x, b.y, b.w, b.h, rad); c.stroke();
+    c.globalAlpha = f.env * (f.big ? 0.14 : 0.07); c.fillStyle = f.col; c.fill(); c.restore();
+  }
   function contact(c) {
     c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, PW, PH); header(c, 'Contact');
     if (avatar) { c.save(); c.beginPath(); c.arc(PW / 2, 190, 50, 0, 7); c.clip(); cover(c, avatar, PW / 2 - 50, 190 - 50, 100, 100); c.restore(); c.textAlign = 'center'; }
@@ -333,21 +369,25 @@ export async function createScreen(renderer) {
     c.fillStyle = '#000'; c.font = `600 22px ${FONT}`; c.fillText(CONTACT.name, PW / 2, 274);
     contactRows().forEach((r, i) => {
       const b = rowRect(i);
-      c.fillStyle = '#fff'; rr(c, b.x, b.y, b.w, b.h, 12); c.fill();
+      const f = rowFx(r, i); c.save(); fxBegin(c, b, f, 12);
+      c.fillStyle = '#fff'; rr(c, b.x, b.y, b.w, b.h, 12); c.fill(); fxEdge(c, b, f, 12);
       const tx = r.icon ? b.x + 46 : b.x + 16;
       if (r.icon) brandIcon(c, r.icon, b.x + 16, b.y + 16, 24);
       c.textAlign = 'left'; c.fillStyle = '#000'; c.font = `400 13px ${FONT}`; c.fillText(r.label.toLowerCase(), tx, b.y + 22);
       c.fillStyle = '#0a84ff'; c.font = `400 17px ${FONT}`; c.fillText(r.value, tx, b.y + 44);
+      c.restore();
     });
   }
   function aboutSlide(c) {
     about(c);
     contactRows().forEach((r, i) => {
       const b = { x: 16, y: 560 + i * 52, w: PW - 32, h: 44 };
-      c.fillStyle = '#f2f2f7'; rr(c, b.x, b.y, b.w, b.h, 12); c.fill();
+      const f = rowFx(r, i); c.save(); fxBegin(c, b, f, 12);
+      c.fillStyle = '#f2f2f7'; rr(c, b.x, b.y, b.w, b.h, 12); c.fill(); fxEdge(c, b, f, 12);
       if (r.icon) brandIcon(c, r.icon, b.x + 14, b.y + 13, 18);
       c.textAlign = 'left'; c.fillStyle = '#8e8e93'; c.font = `400 13px ${FONT}`; c.fillText(r.label, r.icon ? b.x + 40 : b.x + 14, b.y + 27);
       c.textAlign = 'right'; c.fillStyle = '#0a84ff'; c.font = `500 15px ${FONT}`; c.fillText(r.value, b.x + b.w - 14, b.y + 28);
+      c.restore();
     });
   }
   const APP_BAR = { library: '#000', about: '#000', contact: '#000' };
@@ -399,7 +439,9 @@ export async function createScreen(renderer) {
   const rips = [];
   function paint(p) {
     if (st.mode !== 'auto' && !st.g && (p < 0.8 || Math.abs(p - st.p0) > 0.004)) { st.mode = 'auto'; lastKey = ''; }
-    if (rips.length) lastKey = '';
+    if (hl.pending && p > 0.94) { hl.pending = false; hl.t0 = performance.now(); }
+    if (rips.length || hlActive()) lastKey = '';
+    if (hl.t0 && !hlActive()) { hl.t0 = 0; lastKey = ''; }
     if (st.mode === 'auto') paintAuto(p); else paintLive();
     if (!rips.length) return;
     const now = performance.now(), c = ctx; c.setTransform(S, 0, 0, S, 0, 0);

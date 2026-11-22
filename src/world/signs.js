@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { toonMaterial } from './toon.js';
 
-// App icons mounted flat on the two alley walls (z = ±2.5) where the camera drops in.
+// App icons mounted flat on the two alley walls (z = ±2.5) along the ground walk (x 38..60).
 const ICONS = ['veep-ar', 'demi', 'marriott-bonvoy', 'viralcooker', 'vision3d', 'whop']; // phone APPS list plus Whop (top row, south wall)
 
 export function createSigns() {
@@ -12,12 +12,12 @@ export function createSigns() {
   const frameMat = toonMaterial();
   const frameGeo = new THREE.BoxGeometry(1, 1, 1);
   frameGeo.setAttribute('color', new THREE.Float32BufferAttribute(new Array(frameGeo.attributes.position.count * 3).fill(0.04), 3));
-  // Two vertical columns, flat on the facing walls, beside the camera's drop into the alley (x -46).
-  // House at cx -45.5 (rows 2 and 3): windows at cx ±1.7, rows y 4.6 / 8.3 / 12.0, so the 2 m gap at cx is clear.
-  const SIZE = 1.5, X = -45.5, ROWS_Y = [4.6, 8.3, 12.0].map((y) => y + 0.85);
+  // One pair per house on the last three houses (cx 38.5 / 45.5 / 52.5), at walking eye level in the clear gap at cx.
+  // +0.4 m off cx clears the door canopy (ends cx-0.75) and the ground window (starts cx+1.2).
+  const SIZE = 1.4, XS = [38.9, 45.9, 52.9], Y = 2.6;
   ICONS.forEach((name, i) => {
     const side = i % 2 ? 1 : -1;               // -1 north wall faces +z, +1 south wall faces -z
-    const y = ROWS_Y[Math.floor(i / 2)];
+    const y = Y, X = XS[Math.floor(i / 2)];
     const z = side * (2.5 - 0.06);
     const tex = loader.load(`${base}apps/${name}.jpg`);
     tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = 8;

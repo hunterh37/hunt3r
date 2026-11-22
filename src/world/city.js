@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Builder, mulberry } from './builder.js';
-import { AMBER } from './toon.js';
 
 // Back Bay, simplified. x east-west, z north(-) to south(+). Alley centreline is z=0, camera ends at x=-46 looking +x.
 // Row = [zNorth, zSouth, backDir]. backDir +1: back wall at zSouth faces +z.
@@ -13,6 +12,8 @@ const BLOCKS_ALLEY = [-2, -1, 0, 1];
 const LOT = 7, PERBLOCK = 16, PERIOD = 128;
 const GL = 0.2;
 const XMIN = -312, XMAX = 440;
+// colour tag for the ground-level colour spread (toon.js): tiny g offset, stays grey until coloured
+const T = (v, tag) => [v, v + tag * 0.01, v];
 
 export function buildCity(signMat) {
   const B = new Builder();
@@ -24,13 +25,13 @@ export function buildCity(signMat) {
   B.box(60, -0.4, 250, 4000, 0.4, 1000, 0.8);           // land, top y=0
   B.box(60, -1.9, -760, 4000, 0.7, 1250, 0.5);           // river, top y=-1.2
   B.box(60, -1.2, -135.5, 4000, 1.2, 1, 0.74);           // sea wall face
-  const street = (x0, x1, z0, z1, c = 0.36, h = 0.14) => B.box((x0 + x1) / 2, 0, (z0 + z1) / 2, x1 - x0, h, z1 - z0, c);
+  const street = (x0, x1, z0, z1, c = 0.36, h = 0.14) => B.box((x0 + x1) / 2, 0, (z0 + z1) / 2, x1 - x0, h, z1 - z0, T(c, 7));
   for (const [a, b] of [[-105.5, -89.5], [-40.5, -24.5], [24.5, 60.5], [109.5, 125.5], [174.5, 190.5]]) street(XMIN - 16, XMAX + 16, a, b);
-  for (const a of [-67.5, 82.5, 147.5]) street(XMIN - 16, XMAX + 16, a, a + 5, 0.46);
+  for (const a of [-67.5, 82.5, 147.5]) street(XMIN - 16, XMAX + 16, a, a + 5, 0.46, 0.13);
   street(XMIN - 16, XMAX + 16, -2.5, 2.5, 0.8);
-  for (const b of [-3, -2, -1, 0, 1, 2, 3]) street(b * PERIOD + 56, b * PERIOD + 72, -105.5, 190.5);
+  for (const b of [-3, -2, -1, 0, 1, 2, 3]) street(b * PERIOD + 56, b * PERIOD + 72, -105.5, 190.5, 0.36, 0.12); // lower than the E-W streets: no coplanar tops at crossings
   // Comm Ave mall
-  B.box(60, 0, 42.5, XMAX - XMIN + 32, 0.5, 10, 0.78);
+  B.box(60, 0, 42.5, XMAX - XMIN + 32, 0.5, 10, T(0.78, 8));
   B.box(60, 0.5, 42.5, XMAX - XMIN + 32, 0.04, 2.2, 0.95);
   // Esplanade
   B.box(60, 0, -120, XMAX - XMIN + 400, 0.12, 29.5, 0.76);
@@ -45,9 +46,9 @@ export function buildCity(signMat) {
   for (let i = 0; i < 60; i++) { const w = R(14, 40); B.box(-500 + i * 22, 0, -700, w, R(8, 38), R(14, 26), R(0.5, 0.72)); }
 
   function tree(x, z, s = 1) {
-    B.cyl(x, 0, z, 0.35 * s, 3.6 * s, 6, 0.4);
-    B.sphere(x, 6.2 * s, z, 3.2 * s, 0.82, 1, 0.9);
-    B.sphere(x + 0.5 * s, 8.4 * s, z - 0.3 * s, 2.0 * s, 0.9, 1, 0.9);
+    B.cyl(x, 0, z, 0.35 * s, 3.6 * s, 6, T(0.4, 2));
+    B.sphere(x, 6.2 * s, z, 3.2 * s, T(0.82, 1), 1, 0.9);
+    B.sphere(x + 0.5 * s, 8.4 * s, z - 0.3 * s, 2.0 * s, T(0.9, 1), 1, 0.9);
   }
 
   // street trees
@@ -56,8 +57,9 @@ export function buildCity(signMat) {
 
   // parked cars on streets
   const car = (x, z, tone) => {
-    B.box(x, 0.35, z, 4.3, 0.85, 1.8, tone);
-    B.box(x - 0.1, 1.2, z, 2.3, 0.75, 1.6, tone, 0, 0.3, 0.1);
+    const ct = T(tone, Math.floor(x) & 1 ? 5 : 6);
+    B.box(x, 0.35, z, 4.3, 0.85, 1.8, ct);
+    B.box(x - 0.1, 1.2, z, 2.3, 0.75, 1.6, ct, 0, 0.3, 0.1);
     B.box(x - 0.1, 1.3, z, 2.35, 0.5, 1.62, 0.1, 0, 0.35, 0.05);
     for (const sx of [-1.4, 1.4]) for (const sz of [-0.8, 0.8]) B.tube([x + sx, 0.38, z + sz * 1.0], [x + sx, 0.38, z + sz * 1.0 + sz * 0.15], 0.38, 0.38, 8, 0.1);
   };
@@ -67,7 +69,7 @@ export function buildCity(signMat) {
   ROWS.forEach((row, ri) => {
     for (const b of (ri === 2 || ri === 3 ? BLOCKS_ALLEY : BLOCKS)) for (let i = 0; i < PERBLOCK; i++) {
       const cx = b * PERIOD - 56 + LOT / 2 + LOT * i;
-      const A = (ri === 2 || ri === 3) && cx > -140 && cx < 35;
+      const A = (ri === 2 || ri === 3) && cx > -140 && cx < 57;
       house(cx, row, A, ri, i);
     }
   });
@@ -78,8 +80,8 @@ export function buildCity(signMat) {
     const tone = 0.66 + rnd() * 0.12;
     const fd = -bd;
     const zF = bd > 0 ? z0 : z1, zK = bd > 0 ? z1 : z0;
-    B.box(cx, 0, zc, W, H, D, tone);
-    B.box(cx, H, zc, W, 3.2, D, 0.34, 0, 1.1, 1.5);
+    B.box(cx, 0, zc, W, H, D, T(tone, 3));
+    B.box(cx, H, zc, W, 3.2, D, T(0.34, 9), 0, 1.1, 1.5);
     B.box(cx, H + 3.2, zc, W - 2.2, 0.3, D - 3, 0.9);
     B.box(cx + R(-1.2, 1.2), H + 3.2, zc + R(-6, 6), 0.9, 2.3, 0.9, 0.45);
     if (rnd() < 0.7) B.box(cx + R(-1.2, 1.2), H + 3.2, zc + R(-6, 6), 0.9, 1.8, 0.9, 0.45);
@@ -95,7 +97,7 @@ export function buildCity(signMat) {
       B.box(cx, H + 0.9, zz + side * 0.52, 0.9, 0.9, 0.08, GL);
     }
     // front: bay, windows, door, stoop
-    B.box(cx, 2.6, zF + fd * 0.65, 3.4, 11.8, 1.3, Math.min(tone + 0.1, 0.8));
+    B.box(cx, 2.6, zF + fd * 0.65, 3.4, 11.8, 1.3, T(Math.min(tone + 0.1, 0.8), 3));
     B.box(cx, 14.4, zF + fd * 0.65, 3.8, 0.35, 1.6, 0.9);
     for (const y of [4.1, 7.8, 11.5]) {
       B.box(cx, y, zF + fd * 1.33, 2.5, 1.7, 0.1, GL);
@@ -116,15 +118,15 @@ export function buildCity(signMat) {
   function back(cx, zK, bd, tone, ri, i) {
     const o = (d) => zK + bd * d;
     for (const y of [4.6, 8.3, 12.0]) for (const sx of [-1.7, 1.7]) {
-      const lit = ri === 2 && Math.abs(cx + 24.5) < 0.1 && sx > 0 && y === 4.6;
-      B.box(cx + sx, y, o(0.07), 1.0, 1.7, 0.1, lit ? AMBER : GL);
+      const lit = ri === 2 && Math.abs(cx - 45.5) < 0.1 && sx > 0 && y === 4.6;
+      B.box(cx + sx, y, o(0.07), 1.0, 1.7, 0.1, GL);
       B.box(cx + sx, y + 1.7, o(0.12), 1.4, 0.22, 0.24, 0.92);
       if (cx < 30 && !lit) { B.box(cx + sx, y, o(0.12), 0.07, 1.7, 0.05, 0.9); B.box(cx + sx, y + 0.85, o(0.12), 1.0, 0.07, 0.05, 0.9); }
       B.box(cx + sx, y - 0.2, o(0.14), 1.3, 0.16, 0.3, 0.88);
     }
     B.box(cx + 1.7, 1.0, o(0.07), 1.0, 1.4, 0.1, GL);
     B.box(cx - 1.6, 0, o(0.07), 1.05, 2.3, 0.12, ri === 3 ? 0.5 : 0.12);
-    B.box(cx - 1.6, 2.3, o(0.35), 1.7, 0.14, 0.7, 0.9);
+    if (!(cx > 35 && cx < 57)) B.box(cx - 1.6, 2.3, o(0.35), 1.7, 0.14, 0.7, 0.9); // no door canopy on the app-icon houses
     B.box(cx - 1.6, 0, o(0.18), 1.7, 0.18, 0.5, 0.85);
     B.cyl(cx + 3.15, 0, o(0.12), 0.1, H_(), 6, 0.55);
     // ac / meter
@@ -132,13 +134,13 @@ export function buildCity(signMat) {
     if (!quiet && i % 3 === 1) B.box(cx + 1.7, 6.2, o(0.4), 0.9, 0.6, 0.6, 0.85);
     if (i % 4 === 2) B.box(cx - 3.0, 1.2, o(0.15), 0.5, 0.7, 0.3, 0.3);
     // lamp (the one street lamp accent, lit amber)
-    if (ri === 3 && Math.abs(cx + 17.5) < 0.1) {
+    if (ri === 3 && Math.abs(cx - 52.5) < 0.1) {
       B.beam([cx - 1.6, 3.3, o(0.05)], [cx - 1.6, 3.3, o(0.9)], 0.05, 0.1);
-      B.box(cx - 1.95, 2.9, o(0.65), 0.7, 0.7, 0.7, AMBER);
+      B.box(cx - 1.95, 2.9, o(0.65), 0.7, 0.7, 0.7, 0.85);
       B.box(cx - 1.95, 3.5, o(0.6), 0.7, 0.1, 0.7, 0.1);
     }
     // fire escape
-    if (!quiet && cx < 20 && (i % 3 === 0 || i % 7 === 4)) {
+    if (!quiet && cx < 57 && (i % 3 === 0 || i % 7 === 4)) {
       const zo = o(0.65), zr = o(1.28), s = i % 2 ? 1 : -1;
       [4.0, 7.7, 11.4].forEach((y, k) => {
         B.box(cx, y, zo, 3.0, 0.13, 1.3, 0.16);
@@ -190,7 +192,7 @@ export function buildCity(signMat) {
   }
   // bike against the south wall
   {
-    const bx = -22, bz = 1.95;
+    const bx = 47, bz = 1.95;
     for (const sx of [-0.55, 0.55]) {
       B.tube([bx + sx, 0.36, bz - 0.04], [bx + sx, 0.36, bz + 0.04], 0.36, 0.36, 12, 0.12);
       B.tube([bx + sx, 0.36, bz - 0.055], [bx + sx, 0.36, bz + 0.055], 0.27, 0.27, 12, 0.95);
@@ -202,7 +204,7 @@ export function buildCity(signMat) {
   }
   // parked car down the alley
   {
-    const x = 41, z = -0.2;
+    const x = -70, z = -0.2;
     B.box(x, 0.38, z, 4.4, 0.85, 1.85, 0.9);
     B.box(x - 0.2, 1.23, z, 2.4, 0.75, 1.65, 0.9, 0, 0.35, 0.1);
     B.box(x - 0.2, 1.33, z, 2.46, 0.5, 1.67, 0.1, 0, 0.4, 0.05);

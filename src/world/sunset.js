@@ -14,9 +14,9 @@ function oklab([r, g, b]) {
 }
 const mix3 = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 
-// Stops follow the photo generator (phone/tools/gen-sunsets.mjs): warm 1 is orange and magenta, 0 is pink and violet.
-const WARM = [0xffd9a0, 0xff9a45, 0xe8567a, 0x7a3f8f].map(hex);
-const COOL = [0xffe9c4, 0xffb08a, 0xd9708f, 0x6a5a9f].map(hex);
+// Stops: warm 1 is butter gold and rose, 0 is pale pink and lavender. No orange.
+const WARM = [0xfff1b8, 0xffd36e, 0xf07ca6, 0x6f4fa8].map(hex);
+const COOL = [0xfff6d8, 0xffc9d6, 0xc99ae0, 0x5f6ab8].map(hex);
 const TAILS = [0x9db4c8, 0x2a3a7a, 0xb0527a].map(hex); // haze, dusk blue, rose
 
 export function makeSunset(seed) {

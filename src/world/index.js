@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { range, smooth, easeOutCubic, easeInOutCubic, lerp, clamp01 } from '../timeline.js';
+import { range, smooth, easeOutCubic, easeInOutCubic, lerp, clamp01, walkAt, walkS, WALK_L, G } from '../timeline.js';
+import { createAR } from './ar.js';
+import { createTraffic } from './traffic.js';
+import { createSquirrels } from './squirrels.js';
 import { toonMaterial, shared } from './toon.js';
 import { createPost } from './post.js';
 import { buildCity } from './city.js';
@@ -18,9 +21,15 @@ export async function createWorld({ renderer }) {
   const mat = toonMaterial();
   scene.add(buildCity(mat).group);
   scene.add(createSigns().group);
+  const traffic = createTraffic(mat);
+  scene.add(traffic.group);
+  ar.tracked = traffic.boxes;
+  const squirrels = createSquirrels(mat);
+  scene.add(squirrels.group);
 
   const sky = createSky(mat, camera, reduced);
   scene.add(sky.group);
+  const ar = createAR(scene, camera, reduced, renderer);
 
   const post = createPost(renderer, scene, camera);
   const pos = new THREE.Vector3();
@@ -37,9 +46,10 @@ export async function createWorld({ renderer }) {
     const sk = range(p, 0, 0.14), desc = range(p, 0.14, 0.56), land = range(p, 0.56, 0.68);
     let x = lerp(60, 50, sk), y = lerp(1000, 940, sk), z = lerp(60, 55, sk);
     if (p > 0.14) {
-      x = lerp(50, -46, smooth(desc));
+      // hold over the apple deck (y 790, desc ~0.44) so the fall is centred on it, then drift
+      x = lerp(50, 38, smooth(range(desc, 0.46, 1)));
       y = lerp(940, 70, easeInOutCubic(desc));
-      z = lerp(55, 0.0, smooth(range(p, 0.14, 0.45)));
+      z = lerp(55, 0.0, smooth(range(desc, 0.46, 0.8)));
     }
     if (p > 0.56) y = lerp(70, 1.6, easeOutCubic(range(land, 0, 0.85)));
     // touchdown: knees take the drop, one damped dip, settled before the cut at 0.68
@@ -51,6 +61,16 @@ export async function createWorld({ renderer }) {
     const roll = 0.06 * Math.sin(p * 31) * smooth(range(p, 0.12, 0.2)) * (1 - smooth(land));
     let yaw = -Math.PI / 2;
     let py = y, pp = pitch * D2R, pr = roll;
+    if (p > 0.68) {
+      // walk the last houses of the alley, round the corner onto the cross street, stop facing the Comm Ave trees
+      const s = walkS(p);
+      const a = walkAt(s), ah = walkAt(Math.min(WALK_L, s + 2.2));
+      x = a.x; z = a.z; yaw = -Math.PI / 2 - (Math.PI / 2) * ah.turn;
+      const stride = s * Math.PI / 0.78, amt = smooth(range(s, 0, 1.5)) * (1 - smooth(range(s, WALK_L - 1.5, WALK_L)));
+      if (!reduced) { py = 1.6 + amt * (0.04 * Math.abs(Math.sin(stride)) - 0.02); pr = amt * 0.005 * Math.sin(stride); }
+      else py = 1.6;
+      pp = 0.07 * smooth(range(p, G.off1, 0.8));
+    }
     if (!reduced && p >= 0.68) {
       py += 0.018 * Math.sin(t * 0.9);
       pp += 0.004 * Math.sin(t * 0.7);
@@ -69,6 +89,13 @@ export async function createWorld({ renderer }) {
     camera.updateMatrixWorld();
     sky.update(reduced ? 0 : t, p);
     shared.uFog.value = lerp(0.0011, 0.003, smooth(range(p, 0.3, 0.68)));
+    // colour: street trees first, then it spreads over everything around them
+    traffic.update(p, t);
+    ar.update(p, reduced ? 0 : t);
+    squirrels.update(p, reduced ? 0 : t);
+    shared.uColTree.value = smooth(range(p, 0.792, 0.803)) * 70;
+    shared.uColAll.value = smooth(range(p, 0.796, 0.81)) * 260;
+    post.color = smooth(range(p, 0.796, 0.81));
     pos.copy(camera.position);
     post.white = p > 0.1 && p < 0.62 ? 0.92 * sky.whiteout(pos) : 0;
     if (forceWhite !== null) post.white = forceWhite;
@@ -89,7 +116,8 @@ export async function createWorld({ renderer }) {
 
   return {
     update,
-    render(r) { post.render(r); },
+    render(r) { post.render(r); ar.render(r); },
+    get detections() { return ar.detections; },
     resize(w, h) { camera.aspect = w / h; camera.updateProjectionMatrix(); post.resize(); },
   };
 }

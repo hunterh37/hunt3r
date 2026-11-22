@@ -196,7 +196,7 @@ export async function createPhone({ renderer }) {
     scene, camera,
     get visible() { return vis; },
     update(p, t, dt) {
-      curP = p; vis = p >= 0.78;
+      curP = p; vis = p >= 0.799;
       if (!vis) return;
       const u = clamp((p - 0.80) / 0.08);
       // ease-out with overshoot and settle

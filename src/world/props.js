@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { AMBER } from './toon.js';
 
 // Flat clip art that takes the sun's place during the fall: iPhone, Apple Watch, Vision Pro.
 // Vertex greys resolve through the toon ramp: INK to ink, PAPER to paper, MID to mid grey, TONE to mid grey with halftone.
@@ -79,7 +78,7 @@ function iphone(mat) {
   for (let c = 0; c < 3; c++) a.rrect((c - 1) * 3.3, -8.3, 2.3, 2.3, 0.65, PAPER);
   a.bar(-2, -11.25, 2, -11.25, 0.45, INK);
   root.add(a.mesh(mat));
-  const badge = art().disc(0, 0, 1.15, INK).disc(0, 0, 0.8, AMBER).mesh(mat, a.top + 0.1);
+  const badge = art().disc(0, 0, 1.15, INK).disc(0, 0, 0.8, PAPER).mesh(mat, a.top + 0.1);
   badge.position.set(4.9, 8.3, a.top + 0.1);
   root.add(badge);
   return {
@@ -106,7 +105,7 @@ function watch(mat) {
   root.add(a.mesh(mat));
   const hour = art().bar(0, 0, 0, 2.5, 0.85, INK).mesh(mat, a.top + 0.1);
   const minute = art().bar(0, 0, 0, 3.6, 0.6, INK).mesh(mat, a.top + 0.3);
-  const second = art().bar(0, -1.1, 0, 3.9, 0.3, AMBER).disc(0, 0, 0.6, INK).disc(0, 0, 0.28, AMBER).mesh(mat, a.top + 0.5);
+  const second = art().bar(0, -1.1, 0, 3.9, 0.3, INK).disc(0, 0, 0.6, INK).disc(0, 0, 0.28, INK).mesh(mat, a.top + 0.5);
   root.add(hour, minute, second);
   hour.rotation.z = 1.05;
   minute.rotation.z = -1.05;
@@ -130,7 +129,7 @@ function vision(mat) {
   for (const x of [13.7, 14.7, 15.7]) a.bar(x, -0.7, x, 1.9, 0.3, INK).bar(-x, -0.7, -x, 1.9, 0.3, INK);
   a.blob(12.6, 6.8, 3.2, 1.7, INK).blob(11.7, 5.9, 3.2, 1.5, TONE); // visor, glass
   a.bar(-8.6, 1.6, -6.9, 3.6, 0.7, PAPER).bar(-6.6, 1.3, -5.6, 2.5, 0.42, PAPER); // glint
-  a.disc(8.4, 2.9, 0.7, AMBER); // sun in the glass
+  a.disc(8.4, 2.9, 0.7, PAPER); // glint in the glass
   root.add(a.mesh(mat));
   const eyes = new THREE.Group();
   eyes.position.set(0, -0.2, a.top + 0.1);

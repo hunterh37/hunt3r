@@ -1,5 +1,5 @@
 import './ui.css';
-import { range, smooth, clamp01, pAtAlt, TEXT_CLOUDS } from '../timeline.js';
+import { range, smooth, clamp01, pAtAlt, TEXT_CLOUDS, G, W1, WA, WALK_L, walkS } from '../timeline.js';
 import { CARDS, LAYOUT, cardHTML } from './cards.js';
 
 const CAPS = [];
@@ -22,6 +22,10 @@ function flash(p, a, peak, end, amp) {
   return amp * Math.pow(1 - q, 1.8);
 }
 
+// Per-letter spans for the 3D scroll wave on the intro lines.
+const esc = (c) => (c === '&' ? '&amp;' : c === ' ' ? '&nbsp;' : c);
+const lettersOf = (str) => [...str].map((c) => `<span class="zl" aria-hidden="true">${esc(c)}</span>`).join('');
+
 export function createUI(root) {
   const params = new URLSearchParams(location.search);
   const pinned = params.has('p');
@@ -35,10 +39,12 @@ export function createUI(root) {
     <div class="abs hero">
       <div class="hero-cue bl" id="u-cue"><span class="mono">SCROLL</span><span class="chev"></span></div>
     </div>
-    <div class="abs intro" id="u-name"><div class="cloud"><div class="intro-name serif sel">Hunter Harris</div></div></div>
-    <div class="abs intro" id="u-role"><div class="cloud"><div class="intro-line serif sel">visionOS &amp; iOS Engineer</div></div></div>
+    <div class="abs intro" id="u-name"><div class="cloud"><div class="intro-name serif sel z3" aria-label="Hunter Harris">${lettersOf('Hunter Harris')}</div></div></div>
+    <div class="abs intro" id="u-role"><div class="cloud"><div class="intro-line serif sel z3" aria-label="visionOS and iOS Engineer">${lettersOf('visionOS & iOS Engineer')}</div></div></div>
     <div class="abs air" id="u-air">${AIR.map((l) => `<div class="air-l serif sel" aria-label="${l}">${[...l].map((ch) => `<span>${ch}</span>`).join('')}</div>`).join('')}</div>
     ${CAPS.map((c) => `<div class="abs cap"><span class="ln"></span><span class="tx mono sel">${c}</span></div>`).join('')}
+    <div class="abs ar" id="u-ar" aria-hidden="true"><div class="visor"></div><div class="det" id="u-det"></div>
+      <div class="ar-nav"><span class="ar-ico" id="u-ar-ico">↑</span><span class="ar-tx"><b id="u-ar-t"></b><span class="mono" id="u-ar-s"></span></span></div></div>
     <div class="abs dim" id="u-dim"></div>
     <div class="abs cards" id="u-cards">${CARDS.map(cardHTML).join('')}</div>
     <div class="abs veil" id="u-veil"></div>
@@ -49,6 +55,7 @@ export function createUI(root) {
   root.querySelectorAll('.ri').forEach((el) => {
     const go = () => {
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      window.dispatchEvent(new CustomEvent('contact-press'));
     };
     el.addEventListener('click', go);
     el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
@@ -100,9 +107,35 @@ export function createUI(root) {
     const s = `rgb(${c})`;
     if (s !== lastFg) { lastFg = s; root.style.setProperty('--fg', s); root.style.setProperty('--sh', k > 0.5 ? 'rgba(10,10,10,.6)' : 'rgba(244,242,236,.55)'); }
   }
+  const zLetters = ['u-name', 'u-role'].map((id) => [...root.querySelectorAll('#' + id + ' .zl')]);
   let curBeat = -1, lastAlt = '', lastGrain = -1;
 
-  function update(p, t) {
+  // detection callouts inside the glasses HUD: pooled boxes, lock-on when an id first appears
+  const detEl = $('u-det'), detPool = [], seen = new Map();
+  function boxEl(i) {
+    if (!detPool[i]) { const b = document.createElement('div'); b.className = 'dbox'; b.innerHTML = '<i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i><span class="blob"></span><span class="dtag mono"></span>'; detEl.appendChild(b); detPool[i] = b; }
+    return detPool[i];
+  }
+  function drawDet(dets, t) {
+    const live = new Set();
+    dets.forEach((d, i) => {
+      live.add(d.id); if (!seen.has(d.id)) seen.set(d.id, t);
+      const age = t - seen.get(d.id), lock = Math.min(1, age / 0.45), e = 1 - Math.pow(1 - lock, 3);
+      const b = boxEl(i), grow = (1 - e) * 0.35, w = d.x1 - d.x0, h = d.y1 - d.y0;
+      b.style.display = '';
+      b.style.left = ((d.x0 - w * grow / 2) * 100).toFixed(2) + '%'; b.style.top = ((d.y0 - h * grow / 2) * 100).toFixed(2) + '%';
+      b.style.width = (w * (1 + grow) * 100).toFixed(2) + '%'; b.style.height = (h * (1 + grow) * 100).toFixed(2) + '%';
+      b.style.opacity = (0.35 + 0.65 * e).toFixed(2);
+      const n = Math.round(Math.min(1, age / 0.7) * d.label.length);
+      const txt = d.label.slice(0, n) + (n >= d.label.length ? `  ${Math.round(d.conf * 100)}% · ${d.dist.toFixed(1)} M` : '');
+      const tag = b.lastChild; if (tag.textContent !== txt) tag.textContent = txt;
+      b.classList.toggle('locked', lock >= 1);
+    });
+    for (let i = dets.length; i < detPool.length; i++) detPool[i].style.display = 'none';
+    for (const id of [...seen.keys()]) if (!live.has(id)) seen.delete(id);
+  }
+
+  function update(p, t, dets = []) {
     // grain
     if (!pinned && !reduced) {
       const k = Math.floor(t * 12);
@@ -127,9 +160,37 @@ export function createUI(root) {
     [nameEl, roleEl].forEach((el, i) => {
       const [a0, a1, b0, b1] = WIN[i];
       const tin = smooth(range(p, a0, a1)), tout = smooth(range(p, b0, b1));
-      op(el, tin * (1 - tout));
+      op(el, tin);
       tf(el, `scale(${(0.7 + 0.6 * range(p, a0, b1)).toFixed(3)})`);
+      // 3D wave: a crest runs left to right, lifting each letter toward the camera, then the letter falls back and fades
+      const zl = zLetters[i], n = zl.length, q = range(p, a1, b1);
+      for (let k = 0; k < n; k++) {
+        const c = n > 1 ? k / (n - 1) : 0.5;
+        const x = q * 1.5 - 0.25 - c;                       // crest position relative to this letter
+        const h = reduced ? 0 : Math.exp(-(x * x) / 0.018);  // lift
+        const gone = smooth(clamp01((x - 0.08) / 0.22)) * smooth(range(p, b0, b1) * 1.6 + 0.4 * q);
+        const fadeIn = smooth(clamp01((tin - c * 0.35) / 0.65));
+        op(zl[k], fadeIn * (1 - Math.max(gone, tout)));
+        tf(zl[k], `translate3d(0,${(-h * 0.12).toFixed(3)}em,${(h * 140 - gone * 60).toFixed(1)}px) rotateX(${((1 - h) * gone * 38 - h * 8).toFixed(1)}deg)`);
+        set(zl[k], 'h', h > 0.5 ? 1 : 0, (e, v) => e.classList.toggle('hot', !!v));
+      }
     });
+
+    // smart glasses HUD: lens rims in frame plus turn-by-turn, then the paint prompt
+    const arEl = $('u-ar'), hud = smooth(range(p, G.hud0, G.hud1)) * (1 - smooth(range(p, G.hud2, G.hud3)));
+    op(arEl, hud);
+    if (hud > 0) {
+      const s = walkS(p);
+      let ico = '↱', tt = 'Turn right', ss = `${Math.max(1, Math.ceil(W1 - s))} m`;
+      if (p >= G.track0) { ico = '◎'; tt = 'Tracking'; ss = `${dets.length} vehicles`; }
+      else if (p >= G.paint0) { ico = '✎'; tt = 'Pinch to draw'; ss = 'Air canvas'; }
+      else if (s >= WALK_L - 0.3) { ico = '◉'; tt = 'Arrived'; ss = 'Commonwealth Ave'; }
+      else if (s > W1 + WA * 0.8) { ico = '↑'; tt = 'Continue'; ss = `${Math.ceil(WALK_L - s)} m`; }
+      else if (s > W1 - 1.5) ss = 'Now';
+      set(arEl, 'nav', ico + tt + ss, () => { $('u-ar-ico').textContent = ico; $('u-ar-t').textContent = tt; $('u-ar-s').textContent = ss; });
+      tf(arEl, `scale(${(1.06 - 0.06 * hud).toFixed(3)})`);
+    }
+    drawDet(hud > 0.3 ? dets : [], t);
 
     // air text: spelled out between the last text cloud and the ground
     const airEl = $('u-air');

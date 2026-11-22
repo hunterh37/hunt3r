@@ -9,8 +9,7 @@ import { range, smooth, easeInOutCubic, lerp, TEXT_CLOUDS } from '../timeline.js
 function camAt(y) {
   let lo = 0, hi = 1;
   for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (lerp(940, 70, easeInOutCubic(m)) > y) lo = m; else hi = m; }
-  const p = 0.14 + lo * 0.42;
-  return { x: lerp(50, -46, smooth(lo)), z: lerp(55, 0, smooth(range(p, 0.14, 0.45))) };
+  return { x: lerp(50, 38, smooth(range(lo, 0.46, 1))), z: lerp(55, 0, smooth(range(lo, 0.46, 0.8))) };
 }
 
 // Puffy low-poly clouds (merged icospheres, smooth normals so intersections inks as creases), plus the sun.
@@ -106,6 +105,7 @@ export function createSky(sunMat, camera, reduced) {
   // The prop is anchored in camera space so it stays in frame on every aspect; at p 0 on a wide frame it sits at (96, 872, 8).
   const sun = new THREE.Mesh(sunGeo(8.5), sunMat);
   sun.frustumCulled = false;
+  sun.visible = false; // sun removed from the opening; slot 0 stays empty so device timing is unchanged
   const sunRoot = new THREE.Group();
   sunRoot.add(sun);
   const STARTS = [0, 0.045, 0.105, 0.165];
