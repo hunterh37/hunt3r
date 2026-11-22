@@ -5,6 +5,7 @@ import { createPost } from './post.js';
 import { buildCity } from './city.js';
 import { createSky } from './sky.js';
 import { createSigns } from './signs.js';
+import { makeSunset, createPointer } from './sunset.js';
 
 const D2R = Math.PI / 180;
 
@@ -27,6 +28,10 @@ export async function createWorld({ renderer }) {
   let lastY = null, speed = 0;
   const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
   const forceWhite = qs && qs.has('white') ? parseFloat(qs.get('white')) : null; // ?white=0.5 pins the cloud wipe for stills
+  // Sunset light over the top state: new palette each load, ?sun=12 pins one, pinned stills default to 7.
+  const sunSeed = qs && qs.has('sun') ? parseInt(qs.get('sun'), 10) || 0 : pinned ? 7 : (Math.random() * 1e9) | 0;
+  const pointer = createPointer();
+  post.setSunset(makeSunset(sunSeed), pointer.value);
 
   function pose(p, t) {
     const sk = range(p, 0, 0.14), desc = range(p, 0.14, 0.56), land = range(p, 0.56, 0.68);
@@ -62,12 +67,15 @@ export async function createWorld({ renderer }) {
     camera.near = Math.min(10, Math.max(0.08, c.y * 0.012));
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
-    sky.update(reduced ? 0 : t);
+    sky.update(reduced ? 0 : t, p);
     shared.uFog.value = lerp(0.0011, 0.003, smooth(range(p, 0.3, 0.68)));
     pos.copy(camera.position);
     post.white = p > 0.1 && p < 0.62 ? 0.92 * sky.whiteout(pos) : 0;
     if (forceWhite !== null) post.white = forceWhite;
     post.boil = reduced ? 0 : Math.floor(t * 5) * 1.7;
+    const sun = 1 - smooth(range(p, 0.05, 0.21));
+    post.sun = sun;
+    if (sun > 0) { pointer.update(dt, reduced ? 0 : t); post.sunTime = reduced ? 0 : t; }
     // speed lines follow the real fall rate (m/s) of the scrolled camera; pinned stills use the slope of the path
     let want = 0;
     if (!reduced && p > 0.1 && p < 0.68) {

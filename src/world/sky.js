@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mulberry } from './builder.js';
 import { AMBER, toonMaterial } from './toon.js';
 import { cloudDeck, iconCloud } from './shapes.js';
+import { createDevices, swapScale } from './props.js';
 import { range, smooth, easeInOutCubic, lerp, TEXT_CLOUDS } from '../timeline.js';
 
 // Camera xz during the descent at altitude y (mirrors pose() in world/index.js).
@@ -101,10 +102,22 @@ export function createSky(sunMat, camera, reduced) {
   const meshes = group.children.slice();
   const offs = meshes.map(() => 0);
 
+  // Sun, then iPhone, Apple Watch and Vision Pro in its place as the scroll advances (STARTS, in p).
+  // The prop is anchored in camera space so it stays in frame on every aspect; at p 0 on a wide frame it sits at (96, 872, 8).
   const sun = new THREE.Mesh(sunGeo(8.5), sunMat);
-  sun.position.set(96, 872, 8);
   sun.frustumCulled = false;
-  group.add(sun);
+  const sunRoot = new THREE.Group();
+  sunRoot.add(sun);
+  const STARTS = [0, 0.045, 0.105, 0.165];
+  const items = [{ root: sunRoot, tick(t) { sun.rotation.z = t * 0.06; } }, ...createDevices(sunMat)].map((it) => {
+    const holder = new THREE.Group();
+    holder.add(it.root);
+    return { holder, tick: it.tick };
+  });
+  const prop = new THREE.Group();
+  items.forEach((it) => prop.add(it.holder));
+  group.add(prop);
+  const vF = new THREE.Vector3(), vU = new THREE.Vector3(), vR = new THREE.Vector3();
 
   // Clouds that carry the intro text, centred under the camera path, long axis across the screen.
   const textClouds = TEXT_CLOUDS.map((tc) => {
@@ -145,13 +158,32 @@ export function createSky(sunMat, camera, reduced) {
 
   return {
     group,
-    update(t) {
+    update(t, p = 0) {
       meshes.forEach((m, i) => {
         offs[i] = reduced ? 0 : t * (0.6 + 0.3 * i) + 20 * Math.sin(t * 0.05 + i * 2);
         m.position.x = offs[i];
       });
       iconMeshes.forEach((m, i) => { m.position.x = reduced ? 0 : 6 * Math.sin(t * 0.12 + i); });
-      sun.quaternion.copy(camera.quaternion);
+      prop.visible = p < 0.27;
+      if (prop.visible) {
+        const e = camera.matrixWorld;
+        vR.setFromMatrixColumn(e, 0); vU.setFromMatrixColumn(e, 1); vF.setFromMatrixColumn(e, 2).negate();
+        const tv = Math.tan((camera.fov * Math.PI) / 360), th = tv * camera.aspect;
+        const fall = smooth(range(p, 0.02, 0.24)), exit = range(p, 0.225, 0.262);
+        const depth = lerp(128, 72, fall);
+        const ny = 0.6 + 0.06 * fall + 1.6 * exit * exit; // rises out of the top of the frame as the camera falls past
+        prop.position.copy(camera.position).addScaledVector(vF, depth).addScaledVector(vU, ny * tv * depth).addScaledVector(vR, Math.max(-0.406, -0.62 * th) * depth);
+        prop.quaternion.copy(camera.quaternion);
+        prop.scale.setScalar((depth / 128) * lerp(1, 1.3, fall) * Math.min(1, th / 0.38));
+        items.forEach((it, i) => {
+          const { s, spin } = swapScale(p, STARTS, i);
+          it.holder.visible = s > 0.002;
+          if (!it.holder.visible) return;
+          it.holder.scale.setScalar(s);
+          it.holder.rotation.z = spin;
+          it.tick(t);
+        });
+      }
       // hide a text cloud just before the camera would clip into it
       textClouds.forEach((m) => { m.visible = camera.position.y > m.position.y + 75; });
     },

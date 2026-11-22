@@ -8,7 +8,21 @@ uniform sampler2D tColor, tAux;
 uniform vec2 uRes, uTan;
 uniform float uLine, uWhite, uBoil, uCell, uSpeed;
 uniform vec3 uF, uR, uU, uPaper, uMid, uInk, uHaze;
+uniform float uSun, uSunT, uSunA;
+uniform vec2 uSunO, uPtr;
+uniform vec3 uSunC[4];
 varying vec2 vUv;
+
+vec3 oklab2srgb(vec3 c){
+  float l = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
+  float m = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
+  float s = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;
+  l = l * l * l; m = m * m * m; s = s * s * s;
+  vec3 rgb = vec3(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+                  -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+                  -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s);
+  return pow(clamp(rgb, 0.0, 1.0), vec3(1.0 / 2.2));
+}
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p){
@@ -87,6 +101,29 @@ void main(){
     col = mix(col, uInk, rim * 0.85);
     col = mix(col, uPaper, max(1.0 - smoothstep(rad - 0.04, rad, d), smoothstep(0.8, 1.0, cov)));
   }
+  // sunset light at the top state: OKLab gradient on a warped noise field, multiplied onto the paper tones.
+  // The pointer carries the light. On the way down the field widens and the wash breaks into halftone dots.
+  if (uSun > 0.001) {
+    vec2 asp = vec2(uRes.x / uRes.y, 1.0);
+    vec2 c = (vUv - 0.5) * asp;
+    vec2 pc = (uPtr - 0.5) * asp;
+    float glow = exp(-dot(c - pc, c - pc) / 0.18);
+    float z = mix(0.55, 1.0, uSun);
+    float tt = uSunT * 0.035;
+    vec2 q = c * z * 1.15 + uSunO;
+    vec2 w = vec2(vnoise(q * 1.4 + vec2(tt, -tt * 0.7)), vnoise(q * 1.4 + vec2(5.2 - tt * 0.8, 1.3 + tt))) - 0.5;
+    float nz = vnoise(q * 0.9 + w * 1.6 + vec2(0.0, tt * 0.5)) * 0.65 + vnoise(q * 2.1 + w * 1.1 - tt) * 0.35;
+    float f = clamp(0.5 + dot(c * z, vec2(cos(uSunA), sin(uSunA))) * 0.5 + (nz - 0.5) * 0.85 - glow * 0.22, 0.0, 1.0);
+    float x = f * 3.0;
+    int i = int(min(floor(x), 2.0));
+    vec3 g = oklab2srgb(mix(uSunC[i], uSunC[i + 1], x - float(i)));
+    float m = max(smoothstep(0.55, 0.95, uSun), dots(uSun * 2.2));
+    float lum = dot(col, vec3(0.299, 0.587, 0.114));
+    col *= mix(vec3(1.0), g, 0.44 * m);
+    col += g * glow * 0.07 * m * smoothstep(0.15, 0.7, lum);
+    float ph = fract(uSunT) * 61.0;
+    col += (hash(fc + ph) + hash(fc * 1.7 + 13.0 + ph) - 1.0) / 255.0;
+  }
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -102,6 +139,8 @@ export function createPost(renderer, scene, camera) {
       uLine: { value: 1.2 }, uWhite: { value: 0 }, uBoil: { value: 0 }, uSpeed: { value: 0 }, uCell: shared.uCell,
       uF: { value: new THREE.Vector3(0, 0, -1) }, uR: { value: new THREE.Vector3(1, 0, 0) }, uU: { value: new THREE.Vector3(0, 1, 0) },
       uPaper: shared.uPaper, uMid: shared.uMid, uInk: shared.uInk, uHaze: shared.uHaze,
+      uSun: { value: 0 }, uSunT: { value: 0 }, uSunA: { value: 0 }, uSunO: { value: new THREE.Vector2() }, uPtr: { value: new THREE.Vector2(0.5, 0.5) },
+      uSunC: { value: [0, 1, 2, 3].map(() => new THREE.Vector3(1, 0, 0)) },
     },
     vertexShader: vert, fragmentShader: frag, depthTest: false, depthWrite: false,
   });
@@ -128,6 +167,12 @@ export function createPost(renderer, scene, camera) {
     set white(v) { mat.uniforms.uWhite.value = v; },
     set boil(v) { mat.uniforms.uBoil.value = v; },
     set speed(v) { mat.uniforms.uSpeed.value = v; },
+    set sun(v) { mat.uniforms.uSun.value = v; },
+    set sunTime(v) { mat.uniforms.uSunT.value = v; },
+    // s from makeSunset(), ptr is a Vector2 kept by reference
+    setSunset(s, ptr) {
+      mat.uniforms.uSunC.value = s.colors; mat.uniforms.uSunA.value = s.angle; mat.uniforms.uSunO.value = s.offset; mat.uniforms.uPtr.value = ptr;
+    },
     render(r) {
       camera.updateMatrixWorld();
       e.copy(camera.matrixWorld);

@@ -26,5 +26,7 @@ HUNT3R (hunt3r.org) portfolio landing page. Vite + three@0.170, plain ES modules
 ## Checks
 - Dev server: `npm run dev` (port 5183, strict). If the port is busy another agent already runs it; reuse it.
 - Stills: `node scripts/shot.mjs <tag> <p,p,p>` writes notes/shots/<tag>/pNNN.png (1024x640). `?p=0.5&t=3` pins the timeline. Add width 390 as 4th arg for phone portrait.
+- Sunset light (src/world/sunset.js, post.js uSun*): random palette per load, fades p 0.05-0.21. `?sun=<int>` pins a palette; pinned `?p=` stills use seed 7.
+- Sun prop (src/world/props.js, sky.js STARTS): sun, iPhone at p 0.045, Apple Watch at 0.105, Vision Pro at 0.165, exits by 0.26. Camera-anchored.
 - No xcodebuild, no simulators. No git stash, no git worktree. Do not spawn subagents.
 - Perf budget: 60 fps on an M1 laptop, under 250 draw calls, instancing and merged geometry for buildings, no textures over 2048.
