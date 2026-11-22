@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://hunt3r.org/</loc>
+    <video:video>
+      <video:thumbnail_loc>https://hunt3r.org/og/cover.jpg</video:thumbnail_loc>
+      <video:title>Hunter Harris site preview</video:title>
+      <video:description>Scroll through hunt3r.org: a fall through the clouds into a 3D Back Bay alley.</video:description>
+      <video:content_loc>https://hunt3r.org/og/preview.mp4</video:content_loc>
+    </video:video>
+  </url>
+</urlset>
