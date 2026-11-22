@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mulberry } from './builder.js';
 import { AMBER, toonMaterial } from './toon.js';
 import { cloudDeck, iconCloud } from './shapes.js';
-import { createDevices, swapScale } from './props.js';
+import { swapScale } from './props.js';
 import { range, smooth, easeInOutCubic, lerp, TEXT_CLOUDS } from '../timeline.js';
 
 // Camera xz during the descent at altitude y (mirrors pose() in world/index.js).
@@ -40,6 +40,54 @@ function clusterGeo(seed) {
   return g;
 }
 
+// Vision Pro front silhouette for the name cloud: every vertex is pushed radially from the cloud centre onto a
+// rounded slab whose outline is a wide superellipse with the nose notch cut into the bottom edge.
+const VP_NOSE = -1; // +1: notch on local +z, -1: on -z
+function vpRadius(c, s) {
+  const A = 170, C = 82, n = 3.2;
+  let R = Math.pow(Math.pow(Math.abs(c) / A, n) + Math.pow(Math.abs(s) / C, n), -1 / n);
+  const x = c * R;
+  if (s * VP_NOSE > 0 && Math.abs(x) < 58) R -= 38 * (1 - (x / 58) ** 2) * Math.abs(s);
+  return R;
+}
+// iPhone in landscape: rounded rectangle outline.
+function phoneRadius(c, s) {
+  const A = 175, C = 86, n = 6;
+  return Math.pow(Math.pow(Math.abs(c) / A, n) + Math.pow(Math.abs(s) / C, n), -1 / n);
+}
+function shapeTarget(g, radius, B) {
+  const P = g.attributes.position.array, n = P.length;
+  const pos = new Float32Array(n), nor = new Float32Array(n), cy = 28;
+  const F = (x, y, z) => { const h = Math.hypot(x, z) || 1e-6; return (h / radius(x / h, z / h)) ** 4 + (Math.abs(y - cy) / B) ** 4; };
+  for (let i = 0; i < n; i += 3) {
+    let dx = P[i], dy = P[i + 1] - cy, dz = P[i + 2];
+    const L = Math.hypot(dx, dy, dz) || 1; dx /= L; dy /= L; dz /= L;
+    const h = Math.hypot(dx, dz) || 1e-6, R = radius(dx / h, dz / h);
+    // each puff lands on a slightly smaller copy of the slab, so the first puff is the visible skin
+    const t = Math.pow((h / R) ** 4 + (Math.abs(dy) / B) ** 4, -0.25) * (1 - Math.floor(i / 2880) * 0.006);
+    const x = dx * t, y = dy * t + cy, z = dz * t, e = 0.5;
+    pos[i] = x; pos[i + 1] = y; pos[i + 2] = z;
+    let gx = F(x + e, y, z) - F(x - e, y, z), gy = F(x, y + e, z) - F(x, y - e, z), gz = F(x, y, z + e) - F(x, y, z - e);
+    const gl = Math.hypot(gx, gy, gz) || 1;
+    nor[i] = gx / gl; nor[i + 1] = gy / gl; nor[i + 2] = gz / gl;
+  }
+  return { pos, nor, col: g.attributes.color.array.slice() };
+}
+function morpher(m, radius, B) {
+  const g = m.geometry, base = ['position', 'normal', 'color'].map((k) => g.attributes[k].array.slice());
+  const tg = shapeTarget(g, radius, B), to = [tg.pos, tg.nor, tg.col];
+  let last = -1;
+  return (k) => {
+    k = Math.round(k * 200) / 200;
+    if (k === last) return; last = k;
+    ['position', 'normal', 'color'].forEach((name, j) => {
+      const a = g.attributes[name], arr = a.array, b0 = base[j], b1 = to[j];
+      for (let i = 0; i < arr.length; i++) arr[i] = b0[i] + (b1[i] - b0[i]) * k;
+      a.needsUpdate = true;
+    });
+  };
+}
+
 function sunGeo(R) {
   const pos = [], nor = [], col = [];
   const tri = (a, b, c, color) => { for (const v of [a, b, c]) { pos.push(v[0], v[1], 0); nor.push(0, 0, 1); col.push(...color); } };
@@ -74,6 +122,7 @@ export function createSky(sunMat, camera, reduced) {
     { y: 625, n: 0, s: [0.42, 0.42], seed: 5, hero: [12, 33] },
   ];
   const insts = [];
+  let heroMesh = null;
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3();
   layers.forEach((L, li) => {
     const geo = clusterGeo(L.seed * 13);
@@ -95,21 +144,22 @@ export function createSky(sunMat, camera, reduced) {
       insts.push({ li, x: c.x, y: L.y, z: c.z, s: c.s });
     });
     mesh.frustumCulled = false;
+    if (L.hero) heroMesh = mesh;
     mesh.userData.li = li;
     group.add(mesh);
   });
   const meshes = group.children.slice();
   const offs = meshes.map(() => 0);
 
-  // Sun, then iPhone, Apple Watch and Vision Pro in its place as the scroll advances (STARTS, in p).
+  // Sun, held for the whole fall.
   // The prop is anchored in camera space so it stays in frame on every aspect; at p 0 on a wide frame it sits at (96, 872, 8).
   const sun = new THREE.Mesh(sunGeo(8.5), sunMat);
   sun.frustumCulled = false;
   sun.visible = false; // sun removed from the opening; slot 0 stays empty so device timing is unchanged
   const sunRoot = new THREE.Group();
   sunRoot.add(sun);
-  const STARTS = [0, 0.045, 0.105, 0.165];
-  const items = [{ root: sunRoot, tick(t) { sun.rotation.z = t * 0.06; } }, ...createDevices(sunMat)].map((it) => {
+  const STARTS = [0];
+  const items = [{ root: sunRoot, tick(t) { sun.rotation.z = t * 0.06; } }].map((it) => {
     const holder = new THREE.Group();
     holder.add(it.root);
     return { holder, tick: it.tick };
@@ -130,6 +180,8 @@ export function createSky(sunMat, camera, reduced) {
     group.add(m);
     return m;
   });
+  const visor = morpher(textClouds[0], vpRadius, 34); // name cloud turns into the Vision Pro front on scroll
+  const phone = textClouds[1] && morpher(textClouds[1], phoneRadius, 22); // role cloud turns into an iPhone
 
   // Deck the camera falls through: apple.
   const decks = [
@@ -186,6 +238,11 @@ export function createSky(sunMat, camera, reduced) {
       }
       // hide a text cloud just before the camera would clip into it
       textClouds.forEach((m) => { m.visible = camera.position.y > m.position.y + 75; });
+      // the role cloud stays hidden while the name cloud is still overhead, so the visor reads clean
+      if (heroMesh) heroMesh.visible = camera.position.y < textClouds[0].position.y + 75;
+      if (textClouds[1]) textClouds[1].visible = textClouds[1].visible && camera.position.y < textClouds[0].position.y + 75;
+      visor(smooth(range(camera.position.y, 995, 948)));
+      if (phone) phone(smooth(range(camera.position.y, 650, 595)));
     },
     whiteout(cp) {
       let w = 0;

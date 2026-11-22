@@ -25,11 +25,11 @@ export function pAtAlt(y) {
 // Intro text clouds: real 3D sky clouds under the camera path; the HTML text sits over them.
 export const TEXT_CLOUDS = [{ y: 560, s: 0.62, seed: 21 }, { y: 410, s: 0.62, seed: 34 }];
 
-// Ground walk path (world/index.js pose, world/ar.js chevrons, ui HUD): alley z 0 from x 38 to 60,
+// Ground walk path (world/index.js pose, world/ar.js chevrons, ui HUD): alley z 0 from x 34 to 60,
 // quarter arc (r 4) right round the corner, then +z up the cross street toward the Comm Ave trees.
-export const W1 = 22, WR = 4, WA = (Math.PI / 2) * WR, W3 = 8, WALK_L = W1 + WA + W3;
+export const W1 = 26, WR = 4, WA = (Math.PI / 2) * WR, W3 = 8, WALK_L = W1 + WA + W3;
 export function walkAt(s) {
-  if (s <= W1) return { x: 38 + s, z: 0, turn: 0 };
+  if (s <= W1) return { x: 34 + s, z: 0, turn: 0 };
   if (s <= W1 + WA) { const u = (s - W1) / WA, th = u * Math.PI / 2; return { x: 60 + WR * Math.sin(th), z: WR - WR * Math.cos(th), turn: u }; }
   return { x: 64, z: WR + (s - W1 - WA), turn: 1 };
 }
