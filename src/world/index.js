@@ -23,13 +23,13 @@ export async function createWorld({ renderer }) {
   scene.add(createSigns().group);
   const traffic = createTraffic(mat);
   scene.add(traffic.group);
-  ar.tracked = traffic.boxes;
   const squirrels = createSquirrels(mat);
   scene.add(squirrels.group);
 
   const sky = createSky(mat, camera, reduced);
   scene.add(sky.group);
   const ar = createAR(scene, camera, reduced, renderer);
+  ar.tracked = traffic.boxes;
 
   const post = createPost(renderer, scene, camera);
   const pos = new THREE.Vector3();

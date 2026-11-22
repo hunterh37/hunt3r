@@ -465,7 +465,7 @@ export async function createScreen(renderer) {
       if (di >= 0) { const d = DOCK[di]; if (d.app) openApp(d.app); else d.act(); }
       return;
     }
-    if (y > PH - 34) { goHome(); return; }
+    if (y > PH - 72) { goHome(); return; } // generous tap target around the home bar
     if (st.app === 'contact' || st.app === 'about') {
       const rows2 = contactRows(), j2 = rows2.findIndex((_, j) => hit({ x: 16, y: 560 + j * 52, w: PW - 32, h: 44 }, x, y, 0));
       if (st.app === 'about') { if (j2 >= 0) { const r = rows2[j2]; if (r.ext) window.open(r.href, '_blank', 'noopener'); else location.href = r.href; } return; }
@@ -476,17 +476,17 @@ export async function createScreen(renderer) {
   const input = {
     down(x, y, p) {
       setInteractive(p);
-      st.g = { x0: x, y0: y, sy0: st.scroll, moved: false, kind: inApp() && y > PH - 60 ? 'home' : 'pan' };
+      st.g = { x0: x, y0: y, sy0: st.scroll, moved: false, kind: inApp() && y > PH - 120 ? 'home' : 'pan' };
     },
     move(x, y) {
       const g = st.g; if (!g || Number.isNaN(x)) return;
       if (Math.hypot(x - g.x0, y - g.y0) > 8) g.moved = true;
-      if (g.kind === 'home') st.lift = clamp((g.y0 - y) / 320);
+      if (g.kind === 'home') st.lift = clamp((g.y0 - y) / 200);
       else if (inApp() && st.app === 'library') st.scroll = clamp(g.sy0 - (y - g.y0), 0, LIB_MAX);
     },
     up(x, y) {
       const g = st.g; st.g = null; if (!g) return;
-      if (g.kind === 'home' && g.moved) { if (st.lift > 0.18) { st.k = clamp(st.k - st.lift * 0.75); st.kTo = 0; } st.lift = 0; return; }
+      if (g.kind === 'home' && g.moved) { if (st.lift > 0.08) { st.k = clamp(st.k - st.lift * 0.75); st.kTo = 0; } st.lift = 0; return; }
       if (!g.moved) tap(x, y);
     },
     wheel(dy, p) {
