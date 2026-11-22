@@ -47,7 +47,7 @@ export async function createWorld({ renderer }) {
     let x = lerp(60, 50, sk), y = lerp(1000, 940, sk), z = lerp(60, 55, sk);
     if (p > 0.14) {
       // hold over the apple deck (y 790, desc ~0.44) so the fall is centred on it, then drift
-      x = lerp(50, 38, smooth(range(desc, 0.46, 1)));
+      x = lerp(50, 34, smooth(range(desc, 0.46, 1)));
       y = lerp(940, 70, easeInOutCubic(desc));
       z = lerp(55, 0.0, smooth(range(desc, 0.46, 0.8)));
     }

@@ -9,7 +9,7 @@ import { range, smooth, easeInOutCubic, lerp, TEXT_CLOUDS } from '../timeline.js
 function camAt(y) {
   let lo = 0, hi = 1;
   for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (lerp(940, 70, easeInOutCubic(m)) > y) lo = m; else hi = m; }
-  return { x: lerp(50, 38, smooth(range(lo, 0.46, 1))), z: lerp(55, 0, smooth(range(lo, 0.46, 0.8))) };
+  return { x: lerp(50, 34, smooth(range(lo, 0.46, 1))), z: lerp(55, 0, smooth(range(lo, 0.46, 0.8))) };
 }
 
 // Puffy low-poly clouds (merged icospheres, smooth normals so intersections inks as creases), plus the sun.
