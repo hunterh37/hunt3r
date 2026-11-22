@@ -203,3 +203,10 @@
 .dbox.locked .blob { animation-duration:2.4s; }
 .dtag { position:absolute; left:-2px; top:-22px; white-space:nowrap; padding:2px 6px; background:rgba(14,22,34,.6); color:#dff3ff; border-left:2px solid #7cd0ff; font-size:10px !important; }
 @keyframes blob { 0%,100% { transform:translate(-50%,-50%) scale(.85); opacity:.75; } 50% { transform:translate(-50%,-50%) scale(1.12); opacity:1; } }
+
+/* idle scroll nudge */
+.more { left:50%; bottom:calc(var(--gut) + 6px); transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; pointer-events:none; z-index:3; color:#f4f2ec; }
+.more .mono { text-shadow:0 0 10px rgba(124,208,255,.9), 0 0 22px rgba(124,208,255,.55), 0 0 2px rgba(10,10,10,.6); animation:moreGlow 2.2s ease-in-out infinite; }
+.more .chev { width:10px; height:10px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); filter:drop-shadow(0 0 6px rgba(124,208,255,.9)); animation:moreBob 1.6s ease-in-out infinite; }
+@keyframes moreGlow { 0%,100% { opacity:.7; } 50% { opacity:1; } }
+@keyframes moreBob { 0%,100% { transform:translateY(0) rotate(45deg); } 50% { transform:translateY(5px) rotate(45deg); } }

@@ -45,6 +45,7 @@ export function createUI(root) {
     ${CAPS.map((c) => `<div class="abs cap"><span class="ln"></span><span class="tx mono sel">${c}</span></div>`).join('')}
     <div class="abs ar" id="u-ar" aria-hidden="true"><div class="visor"></div><div class="det" id="u-det"></div>
       <div class="ar-nav"><span class="ar-ico" id="u-ar-ico">↑</span><span class="ar-tx"><b id="u-ar-t"></b><span class="mono" id="u-ar-s"></span></span></div></div>
+    <div class="abs more" id="u-more" aria-hidden="true"><span class="mono">Keep scrolling</span><span class="chev"></span></div>
     <div class="abs dim" id="u-dim"></div>
     <div class="abs cards" id="u-cards">${CARDS.map(cardHTML).join('')}</div>
     <div class="abs veil" id="u-veil"></div>
@@ -135,7 +136,20 @@ export function createUI(root) {
     for (const id of [...seen.keys()]) if (!live.has(id)) seen.delete(id);
   }
 
+  // idle nudge: if the reader stops short of the end for 2.5 s, a glowing cue fades in at the bottom
+  const moreEl = $('u-more');
+  let lastScroll = performance.now(), more = 0;
+  addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
+  addEventListener('wheel', () => { lastScroll = performance.now(); }, { passive: true });
+  addEventListener('touchmove', () => { lastScroll = performance.now(); }, { passive: true });
+
   function update(p, t, dets = []) {
+    {
+      const idle = (performance.now() - lastScroll) / 1000;
+      const want = !pinned && p > 0.04 && p < 0.97 && idle > 2.5 ? 1 : 0;
+      more += (want - more) * (want ? 0.04 : 0.15);
+      op(moreEl, more);
+    }
     // grain
     if (!pinned && !reduced) {
       const k = Math.floor(t * 12);
@@ -159,9 +173,11 @@ export function createUI(root) {
     // text rides the 3D clouds: grows with them as the camera drops
     [nameEl, roleEl].forEach((el, i) => {
       const [a0, a1, b0, b1] = WIN[i];
-      const tin = smooth(range(p, a0, a1)), tout = smooth(range(p, b0, b1));
+      // the name is already on its cloud at p 0, small and far; the role still fades in on approach
+      const tin = i === 0 ? 1 : smooth(range(p, a0, a1)), tout = smooth(range(p, b0, b1));
       op(el, tin);
-      tf(el, `scale(${(0.7 + 0.6 * range(p, a0, b1)).toFixed(3)})`);
+      const far = i === 0 ? 0.5 + 0.2 * smooth(range(p, 0, a0)) : 0.7;
+      tf(el, `scale(${(p < a0 ? far : 0.7 + 0.6 * range(p, a0, b1)).toFixed(3)})`);
       // 3D wave: a crest runs left to right, lifting each letter toward the camera, then the letter falls back and fades
       const zl = zLetters[i], n = zl.length, q = range(p, a1, b1);
       for (let k = 0; k < n; k++) {
